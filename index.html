@@ -1,0 +1,2434 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>OPENINTEL — verify before you pay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest" defer onerror="console.warn('icons offline — ok')"></script>
+<style>
+:root{
+  --bg:#07080A;--bg2:#0C0E12;--bg3:#12151B;--bg4:#181C24;
+  --line:#20242E;--line2:#2D3240;
+  --fg:#E8E6DF;--mut:#8A8D99;--dim:#565A66;
+  --amber:#FFB000;--amber2:#FFC94D;--ok:#B4E33D;--bad:#FF5340;
+  --cyan:#4DD0E1;--violet:#A78BFA;--orange:#FF6D3A;
+  --mono:'JetBrains Mono',monospace;--disp:'Unbounded',sans-serif;--text:'Manrope',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--text);font-size:15px;line-height:1.6;overflow-x:hidden}
+::selection{background:var(--amber);color:#07080A}
+a{color:inherit}button{font-family:inherit;cursor:pointer}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.45}
+body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E")}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;
+  background-image:linear-gradient(rgba(167,139,250,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(167,139,250,.025) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,black 30%,transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,black 30%,transparent 75%)}
+.page{position:relative;z-index:2}
+.topline{position:fixed;top:0;left:0;right:0;height:2px;z-index:70;opacity:.8;
+  background:linear-gradient(90deg,transparent,var(--amber) 30%,var(--violet) 60%,transparent);
+  background-size:200% 100%;animation:tl 6s linear infinite}
+@keyframes tl{0%{background-position:200% 0}100%{background-position:-200% 0}}
+#readbar{position:fixed;top:2px;left:0;height:2px;background:var(--amber);z-index:71;width:0%;transition:width .1s linear}
+.klabel{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+
+.orb{position:fixed;border-radius:50%;filter:blur(90px);opacity:.15;pointer-events:none;z-index:0}
+.orb-1{width:520px;height:520px;background:radial-gradient(circle,#FFB000,transparent 70%);top:-160px;left:-120px;animation:orb1 22s ease-in-out infinite alternate}
+.orb-2{width:460px;height:460px;background:radial-gradient(circle,#A78BFA,transparent 70%);bottom:-140px;right:-100px;animation:orb2 26s ease-in-out infinite alternate}
+@keyframes orb1{to{transform:translate(140px,90px) scale(1.15)}}
+@keyframes orb2{to{transform:translate(-120px,-80px) scale(1.1)}}
+
+.welcome{position:fixed;inset:0;z-index:400;background:rgba(7,8,10,.97);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:20px}
+.welcome.hide{display:none}
+.w-card{max-width:540px;width:100%;text-align:center;border:1px solid var(--line2);background:var(--bg2);padding:48px 42px;position:relative}
+.w-card::before,.w-card::after{content:'';position:absolute;width:18px;height:18px}
+.w-card::before{top:-2px;left:-2px;border-top:2px solid var(--amber);border-left:2px solid var(--amber)}
+.w-card::after{bottom:-2px;right:-2px;border-bottom:2px solid var(--amber);border-right:2px solid var(--amber)}
+.w-logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:24px}
+.w-logo .logo-ic{width:40px;height:40px;border:1px solid var(--amber);display:flex;align-items:center;justify-content:center;color:var(--amber);box-shadow:0 0 28px -6px var(--amber)}
+.w-logo .logo-ic svg{width:20px;height:20px}
+.w-logo span{font-family:var(--disp);font-weight:700;font-size:17px}
+.w-logo em{font-style:normal;color:var(--amber)}
+.w-card h2{font-family:var(--disp);font-weight:900;font-size:clamp(20px,3.4vw,28px);text-transform:uppercase;line-height:1.15;margin-bottom:12px}
+.w-card .w-sub{color:var(--mut);font-size:14px;margin-bottom:26px}
+.w-lang{display:flex;gap:10px;justify-content:center;margin-bottom:26px}
+.w-lang button{font-family:var(--mono);font-size:13px;padding:12px 28px;background:var(--bg3);border:1px solid var(--line2);color:var(--mut);transition:.2s}
+.w-lang button:hover{color:var(--fg);transform:translateY(-1px)}
+.w-lang button.sel{border-color:var(--amber);color:var(--amber);background:rgba(255,176,0,.07)}
+.w-card .btn{width:100%;justify-content:center}
+.w-card .w-note{font-size:11.5px;color:var(--dim);margin-top:16px;font-family:var(--mono)}
+
+header{position:sticky;top:0;z-index:60;background:rgba(7,8,10,.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:16px;height:62px}
+.logo{display:flex;align-items:center;gap:11px;text-decoration:none}
+.logo-ic{width:32px;height:32px;border:1px solid var(--amber);display:flex;align-items:center;justify-content:center;color:var(--amber);box-shadow:0 0 18px -6px var(--amber);transition:.3s}
+.logo:hover .logo-ic{box-shadow:0 0 30px -4px var(--amber);transform:rotate(-8deg)}
+.logo-ic svg{width:16px;height:16px}
+.logo-w{font-family:var(--disp);font-weight:700;font-size:13px}
+.logo-w em{font-style:normal;color:var(--amber)}
+.logo-tag{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:.14em;display:block}
+nav{display:flex;gap:2px;margin-left:auto}
+nav a{text-decoration:none;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:6px 10px;transition:.2s;border:1px solid transparent}
+nav a:hover{color:var(--amber);border-color:var(--line2)}
+.hd-right{display:flex;align-items:center;gap:10px;padding-left:14px;border-left:1px solid var(--line)}
+.lang-btn{font-family:var(--mono);font-size:11px;padding:6px 10px;border:1px solid var(--line2);background:var(--bg3);color:var(--mut);transition:.2s}
+.lang-btn:hover{color:var(--amber);border-color:var(--amber)}
+.pill{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;padding:6px 11px;border:1px solid var(--line2);background:var(--bg3)}
+.pill svg{width:12px;height:12px;color:var(--amber)}
+.pill b{color:var(--amber)}
+.pill.warn{border-color:var(--bad)}.pill.warn b{color:var(--bad)}
+.user-badge{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;padding:6px 12px;border:1px solid var(--line2);background:var(--bg3);cursor:pointer;transition:.2s}
+.user-badge:hover{border-color:var(--amber)}
+.plan-tag{font-size:9px;letter-spacing:.1em;padding:2px 6px;text-transform:uppercase;border:1px solid var(--line2);color:var(--mut)}
+.plan-pro{color:var(--amber);border-color:var(--amber)}
+.plan-biz{color:var(--violet);border-color:var(--violet)}
+.plan-lite{color:var(--cyan);border-color:var(--cyan)}
+.plan-admin{color:var(--ok);border-color:var(--ok)}
+@media(max-width:1080px){nav{display:none}}
+
+.hero{padding:84px 0 36px;text-align:center;position:relative}
+.hero::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:700px;height:380px;
+  background:radial-gradient(ellipse,rgba(255,176,0,.1),rgba(167,139,250,.06) 45%,transparent 70%);pointer-events:none}
+.hero .kicker{display:inline-flex;align-items:center;gap:10px;margin-bottom:24px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(255,176,0,.35);padding:7px 16px;background:rgba(255,176,0,.05);animation:kIn .7s .1s both}
+@keyframes kIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.hero .kicker i{width:6px;height:6px;background:var(--amber);border-radius:50%;animation:pulse 1.8s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.hero h1{font-family:var(--disp);font-weight:900;text-transform:uppercase;font-size:clamp(26px,5vw,58px);line-height:1.07}
+.hero h1 .grad{background:linear-gradient(95deg,var(--amber) 10%,var(--violet) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.wsplit span{display:inline-block;opacity:0;filter:blur(8px);transform:translateY(14px);animation:wIn .55s both}
+@keyframes wIn{to{opacity:1;filter:blur(0);transform:none}}
+.hero-sub{max-width:640px;margin:20px auto 0;color:var(--mut);font-size:15px;animation:sIn .7s .9s both}
+@keyframes sIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.hero-stats{display:flex;justify-content:center;flex-wrap:wrap;margin-top:40px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);animation:sIn .7s 1.1s both}
+.hstat{flex:1 1 170px;padding:18px 20px;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line);transition:.25s}
+.hstat:hover{background:rgba(255,176,0,.03)}
+.hstat:last-child{border-right:none}
+.hstat b{font-family:var(--disp);font-weight:900;font-size:26px;background:linear-gradient(180deg,var(--fg),var(--mut));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hstat span{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase}
+@media(max-width:760px){.hstat{flex:1 1 46%;border-right:none;border-bottom:1px solid var(--line)}}
+
+.toolbar-wrap{padding-bottom:14px}
+.toolbar{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:6px 0}
+.toolbar::-webkit-scrollbar{display:none}
+.tb-group{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;padding:0 8px;flex-shrink:0}
+.tb-sep{width:1px;height:22px;background:var(--line);flex-shrink:0;margin:0 4px}
+.toolbtn{display:flex;align-items:center;gap:7px;padding:9px 13px;background:var(--bg2);border:1px solid var(--line);color:var(--mut);font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;transition:.2s;flex-shrink:0}
+.toolbtn svg{width:13px;height:13px}
+.toolbtn:hover{border-color:var(--line2);color:var(--fg);transform:translateY(-1px)}
+.toolbtn.active{background:var(--amber);color:#07080A;border-color:var(--amber);font-weight:700;box-shadow:0 6px 20px -8px rgba(255,176,0,.5)}
+
+.console{border:1px solid transparent;background:linear-gradient(var(--bg2),var(--bg2)) padding-box,linear-gradient(135deg,rgba(255,176,0,.5),rgba(167,139,250,.35),rgba(45,50,64,.25)) border-box;position:relative;box-shadow:0 30px 80px -40px rgba(0,0,0,.9);transition:box-shadow .3s}
+.console::before,.console::after{content:'';position:absolute;width:16px;height:16px;pointer-events:none;transition:.3s}
+.console::before{top:-2px;left:-2px;border-top:2px solid var(--amber);border-left:2px solid var(--amber)}
+.console::after{bottom:-2px;right:-2px;border-bottom:2px solid var(--amber);border-right:2px solid var(--amber)}
+.console.busy{box-shadow:0 0 0 1px rgba(255,176,0,.4),0 0 60px -18px rgba(255,176,0,.4),0 30px 80px -40px rgba(0,0,0,.9)}
+.console.busy::before,.console.busy::after{animation:cornerPulse 1s infinite}
+@keyframes cornerPulse{50%{opacity:.35}}
+body.adm .console{box-shadow:0 0 0 1px rgba(180,227,61,.35),0 0 70px -20px rgba(180,227,61,.35),0 30px 80px -40px rgba(0,0,0,.9)}
+body.adm .topline{background:linear-gradient(90deg,transparent,var(--ok) 30%,var(--ok) 60%,transparent);background-size:200% 100%}
+.adm-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:80;background:rgba(180,227,61,.08);border-top:1px solid var(--ok);color:var(--ok);font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;text-align:center;padding:5px}
+body.adm .adm-banner{display:block}
+.con-head{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.con-head .hint{color:var(--dim)}
+@media(max-width:700px){.con-head .hint{display:none}}
+.input-row{display:flex;align-items:stretch;border-bottom:1px solid var(--line)}
+.prefix{display:flex;align-items:center;padding:0 2px 0 20px;font-family:var(--mono);font-size:18px;color:var(--amber);min-width:34px}
+#inp{flex:1;background:none;border:none;outline:none;color:var(--fg);font-family:var(--mono);font-size:clamp(14px,2vw,20px);padding:18px 12px;min-width:0}
+#inp::placeholder{color:#45473b}
+#go{background:var(--amber);color:#07080A;border:none;font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:0 24px;display:flex;align-items:center;gap:8px;transition:.15s;flex-shrink:0}
+#go svg{width:13px;height:13px}
+#go:hover{background:var(--amber2)}
+.detector{display:flex;align-items:center;gap:8px;padding:8px 20px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--dim);min-height:34px}
+.detector svg{width:12px;height:12px;color:var(--cyan)}
+.detector b{color:var(--cyan);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding:9px 18px;border-bottom:1px solid var(--line)}
+.chip{background:var(--bg3);border:1px solid var(--line2);color:var(--mut);font-family:var(--mono);font-size:10px;padding:4px 9px;transition:.15s;white-space:nowrap}
+.chip:hover{color:var(--amber);border-color:var(--amber);transform:translateY(-1px)}
+.history{display:none;align-items:center;gap:5px;flex-wrap:wrap;padding:8px 18px;border-bottom:1px solid var(--line)}
+.history.show{display:flex}
+.hchip{display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--line2);color:var(--dim);font-family:var(--mono);font-size:10px;padding:4px 9px;transition:.15s;max-width:200px;overflow:hidden}
+.hchip svg{width:10px;height:10px;flex-shrink:0}
+.hchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hchip:hover{color:var(--amber);border-color:var(--amber)}
+
+.term{min-height:130px;padding:14px 20px;font-family:var(--mono);font-size:12px;line-height:1.95;border-bottom:1px solid var(--line);max-height:560px;overflow-y:auto;position:relative}
+.term::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.3;background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.12) 2px 3px)}
+.tline{display:flex;align-items:baseline;opacity:0;transform:translateY(3px);transition:.22s;position:relative;z-index:1}
+.tline.show{opacity:1;transform:none}
+.tcmd{color:var(--amber);margin-right:9px;flex-shrink:0}
+.tlab{color:var(--mut);white-space:nowrap}
+.tdots{flex:1;border-bottom:1px dotted #3a3e2c;margin:0 8px;transform:translateY(-3px);min-width:16px}
+.tval{white-space:nowrap}
+.tval.ok{color:var(--ok)}.tval.bad{color:var(--bad)}.tval.amb{color:var(--amber)}.tval.cyan{color:var(--cyan)}.tval.violet{color:var(--violet)}.tval.orange{color:var(--orange)}
+.tplaceholder{color:#50524a}
+.caret{display:inline-block;width:8px;height:14px;background:var(--amber);vertical-align:-2px;animation:blink 1s steps(1) infinite;margin-left:6px}
+@keyframes blink{50%{opacity:0}}
+
+.verdict{display:none;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line);animation:vrise .4s ease both}
+.verdict.show{display:flex}
+@keyframes vrise{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.verdict .v-icon{width:44px;height:44px;border:1px solid;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.verdict .v-icon svg{width:22px;height:22px}
+.verdict .v-txt b{display:block;font-family:var(--disp);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.04em}
+.verdict .v-txt span{font-size:12.5px;color:var(--mut)}
+.verdict.ok .v-icon{color:var(--ok);border-color:var(--ok);background:rgba(180,227,61,.06)}
+.verdict.ok .v-txt b{color:var(--ok)}
+.verdict.warn .v-icon{color:var(--amber);border-color:var(--amber);background:rgba(255,176,0,.06)}
+.verdict.warn .v-txt b{color:var(--amber)}
+.verdict.bad .v-icon{color:var(--bad);border-color:var(--bad);background:rgba(255,83,64,.07)}
+.verdict.bad .v-txt b{color:var(--bad)}
+.verdict.info .v-icon{color:var(--cyan);border-color:var(--cyan);background:rgba(77,208,225,.06)}
+.verdict.info .v-txt b{color:var(--cyan)}
+
+.risk-panel{padding:14px 20px;display:none;border-bottom:1px solid var(--line)}
+.risk-panel.show{display:block}
+.risk-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.risk-verdict{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.risk-score{font-family:var(--mono);font-size:11px;color:var(--mut)}
+.risk-bar{display:flex;gap:3px}
+.risk-bar i{flex:1;height:10px;background:var(--bg3);border:1px solid var(--line);transition:.25s}
+.patterns{padding:8px 20px;display:none;border-bottom:1px solid var(--line)}
+.patterns.show{display:block}
+.pt{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-size:12.5px;color:var(--mut);border-bottom:1px solid var(--line)}
+.pt:last-child{border-bottom:none}
+.pt svg{width:13px;height:13px;flex-shrink:0;margin-top:3px}
+.pt b{color:var(--fg)}
+.pt.bad svg{color:var(--bad)}.pt.warn svg{color:var(--amber)}.pt.ok svg{color:var(--ok)}.pt.info svg{color:var(--cyan)}
+.tool-out{padding:14px 20px;display:none;border-bottom:1px solid var(--line)}
+.tool-out.show{display:block}
+.tool-out label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:5px}
+.tool-out input[type=range]{width:100%;accent-color:var(--amber)}
+.tool-out textarea{width:100%;background:var(--bg);border:1px solid var(--line2);color:var(--fg);font-family:var(--mono);font-size:14px;padding:10px 12px;outline:none;resize:vertical}
+.tool-out textarea:focus{border-color:var(--amber)}
+.tool-out .field{margin-bottom:12px}
+
+.result{display:none;padding:16px 20px;animation:rise .35s ease both}
+.result.show{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.res-grid{display:grid;grid-template-columns:auto 1fr;gap:22px}
+.res-badge{text-align:center;padding:16px 20px;border:1px solid var(--line2);background:var(--bg3);min-width:132px;display:flex;flex-direction:column;align-items:center;gap:6px;height:fit-content}
+.res-badge .big{font-family:var(--disp);font-weight:900;font-size:30px;line-height:1;word-break:break-all}
+.res-badge .sub{font-family:var(--mono);font-size:10px;color:var(--amber)}
+.res-badge .tag{font-family:var(--mono);font-size:9px;color:var(--dim)}
+.res-row{display:flex;justify-content:space-between;gap:14px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line)}
+.res-row:last-child{border-bottom:none}
+.res-row .k{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);min-width:130px}
+.res-row .v{font-family:var(--mono);font-size:12px;text-align:right;word-break:break-all}
+.res-row .v.hi{color:var(--amber);font-weight:700}
+.res-row .v.good{color:var(--ok)}
+.res-row .v.warnv{color:var(--orange)}
+.res-row .v.crit{color:var(--bad);font-weight:700}
+.res-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:9px 15px;border:1px solid var(--line2);background:var(--bg3);color:var(--fg);transition:.15s;position:relative}
+.btn svg{width:12px;height:12px}
+.btn:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-1px)}
+.btn.primary{background:var(--amber);color:#07080A;border-color:var(--amber);font-weight:700;box-shadow:0 8px 24px -10px rgba(255,176,0,.5);overflow:hidden}
+.btn.primary::after{content:'';position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);transition:left .5s}
+.btn.primary:hover::after{left:130%}
+.btn.primary:hover{background:var(--amber2);color:#07080A}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.btn.danger:hover{background:rgba(255,83,64,.1)}
+@media(max-width:760px){.res-grid{grid-template-columns:1fr}}
+
+.limit-overlay{display:none;position:absolute;inset:0;z-index:10;background:rgba(7,8,10,.97);backdrop-filter:blur(5px);align-items:center;justify-content:center;text-align:center;padding:40px}
+.limit-overlay.show{display:flex}
+.limit-box{max-width:440px}
+.limit-box svg{width:44px;height:44px;color:var(--bad);margin-bottom:16px}
+.limit-box h3{font-family:var(--disp);font-weight:700;font-size:17px;margin-bottom:10px;text-transform:uppercase}
+.limit-box p{color:var(--mut);font-size:13.5px;margin-bottom:20px}
+
+.marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;background:var(--bg2);margin:56px 0 0}
+.mq-track{display:flex;width:max-content;animation:mq 32s linear infinite}
+.mq-track span{font-family:var(--disp);font-weight:500;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:15px 0;white-space:nowrap}
+.mq-track span i{color:var(--amber);font-style:normal;padding:0 26px}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+section{padding:64px 0}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
+.sec-num{font-family:var(--mono);font-size:11px;color:var(--amber)}
+h2{font-family:var(--disp);font-weight:700;font-size:clamp(18px,2.8vw,32px);text-transform:uppercase}
+.sec-sub{color:var(--mut);font-size:14px;margin-bottom:32px;max-width:620px}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.2,.7,.3,1),transform .8s cubic-bezier(.2,.7,.3,1)}
+.reveal.in{opacity:1;transform:none}
+
+.mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px;perspective:900px}
+.mod{border:1px solid var(--line);background:var(--bg2);padding:22px;transition:.25s;cursor:pointer;position:relative;overflow:hidden;transform-style:preserve-3d;will-change:transform}
+.mod::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--violet),transparent);opacity:0;transition:.25s}
+.mod::before{content:'';position:absolute;inset:0;background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%),rgba(255,176,0,.06),transparent 45%);opacity:0;transition:.3s;pointer-events:none}
+.mod:hover::before{opacity:1}
+.mod:hover{border-color:rgba(255,176,0,.5);box-shadow:0 20px 50px -24px rgba(255,176,0,.3)}
+.mod:hover::after{opacity:1}
+.mod-ic{width:36px;height:36px;border:1px solid rgba(255,176,0,.35);background:linear-gradient(135deg,rgba(255,176,0,.12),rgba(167,139,250,.1));display:flex;align-items:center;justify-content:center;color:var(--amber);margin-bottom:14px;transition:.25s;transform:translateZ(24px)}
+.mod:hover .mod-ic{border-color:var(--amber);box-shadow:0 0 18px -4px var(--amber)}
+.mod-ic svg{width:16px;height:16px}
+.mod h4{font-family:var(--disp);font-weight:500;font-size:12px;text-transform:uppercase;margin-bottom:6px;transform:translateZ(18px)}
+.mod p{font-size:12.5px;color:var(--mut);line-height:1.55;transform:translateZ(10px)}
+.mod .mod-tag{font-family:var(--mono);font-size:9px;color:var(--ok);letter-spacing:.1em;margin-top:10px;display:inline-flex;align-items:center;gap:5px;transform:translateZ(14px)}
+.mod .mod-tag i{width:5px;height:5px;background:var(--ok);border-radius:50%}
+
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:14px;max-width:1020px;margin:24px auto 0}
+.price-card{border:1px solid var(--line);background:var(--bg2);padding:30px 24px;position:relative;transition:.3s;display:flex;flex-direction:column}
+.price-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--amber),transparent);opacity:.4;transition:.3s}
+.price-card:hover::before{opacity:1}
+.price-card:hover{transform:translateY(-4px);box-shadow:0 24px 60px -30px rgba(0,0,0,.8)}
+.price-card.featured{border-color:var(--amber);background:linear-gradient(180deg,var(--bg3),var(--bg2));box-shadow:0 20px 60px -30px rgba(255,176,0,.35)}
+.price-card.featured::before{background:linear-gradient(90deg,var(--amber),var(--violet),var(--amber));opacity:1}
+.price-card.featured::after{content:'★';position:absolute;top:8px;right:16px;background:var(--amber);color:#07080A;font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 10px}
+.price-card h3{font-family:var(--disp);font-weight:700;font-size:13px;text-transform:uppercase}
+.price-card .price{font-family:var(--disp);font-weight:900;font-size:32px;margin:14px 0 4px}
+.price-card .price small{font-size:11px;color:var(--mut);font-weight:400;display:block;font-family:var(--mono)}
+.price-card .period{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.08em;margin-bottom:18px}
+.price-card ul{list-style:none;margin-bottom:22px;flex:1}
+.price-card li{display:flex;gap:9px;align-items:flex-start;padding:6px 0;font-size:12.5px;color:var(--mut)}
+.price-card li svg{width:13px;height:13px;color:var(--ok);flex-shrink:0;margin-top:3px}
+.price-card li.no svg{color:var(--bad)}
+.price-card .btn{width:100%;justify-content:center}
+
+.priv-box{border:1px solid var(--line2);border-left:3px solid var(--ok);background:var(--bg2);padding:28px 32px;max-width:860px}
+.priv-box ul{list-style:none}
+.priv-box li{display:flex;gap:14px;align-items:flex-start;padding:9px 0;font-size:14px;color:var(--mut)}
+.priv-box li svg{width:16px;height:16px;color:var(--ok);flex-shrink:0;margin-top:4px}
+.priv-box li b{color:var(--fg)}
+
+.modal-bg{position:fixed;inset:0;z-index:200;background:rgba(7,8,10,.92);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--line2);width:100%;max-width:460px;padding:32px 28px;position:relative;animation:modalRise .3s ease both;max-height:90vh;overflow-y:auto}
+@keyframes modalRise{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:none}}
+.modal h3{font-family:var(--disp);font-weight:700;font-size:15px;text-transform:uppercase;margin-bottom:20px}
+.close-x{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--mut);transition:.15s}
+.close-x:hover{color:var(--fg)}
+.close-x svg{width:18px;height:18px}
+.modal label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:5px}
+.modal input{width:100%;background:var(--bg);border:1px solid var(--line2);color:var(--fg);font-family:var(--mono);font-size:13px;padding:11px 12px;outline:none;margin-bottom:14px}
+.modal input:focus{border-color:var(--amber)}
+.modal .btn{width:100%;justify-content:center;margin-bottom:8px}
+.modal .divider{display:flex;align-items:center;gap:12px;margin:14px 0;color:var(--dim);font-family:var(--mono);font-size:10px}
+.modal .divider::before,.modal .divider::after{content:'';flex:1;height:1px;background:var(--line)}
+.modal .note{font-size:12px;color:var(--mut);text-align:center;margin-top:6px}
+.err-msg{color:var(--bad);font-size:12px;font-family:var(--mono);margin:-8px 0 10px;display:none}
+.net-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.net-btn{flex:1;min-width:72px;padding:12px 8px;background:var(--bg3);border:1px solid var(--line2);color:var(--mut);font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:5px}
+.net-btn svg{width:18px;height:18px}
+.net-btn:hover{color:var(--fg)}
+.net-btn.sel{border-color:var(--amber);color:var(--amber);background:rgba(255,176,0,.07)}
+.pay-addr{background:var(--bg);border:1px solid var(--line2);padding:11px 12px;font-family:var(--mono);font-size:11.5px;word-break:break-all;color:var(--fg);margin-bottom:10px}
+.pay-amount{display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border:1px solid var(--line2);padding:11px 14px;margin-bottom:12px;font-family:var(--mono)}
+.pay-amount b{color:var(--amber);font-size:15px}
+.pay-memo{background:rgba(255,109,58,.06);border:1px solid var(--orange);padding:12px 14px;margin-bottom:12px;font-family:var(--mono)}
+.pay-memo .code{font-size:20px;font-weight:700;color:var(--orange);letter-spacing:.15em;margin:4px 0 8px}
+.pay-memo .warn{font-size:11px;color:var(--mut);line-height:1.5}
+.pay-timer{font-family:var(--mono);font-size:12px;color:var(--orange);text-align:center;margin-bottom:12px}
+.spin{display:inline-block;animation:spn 1s linear infinite}
+@keyframes spn{to{transform:rotate(360deg)}}
+
+.admin-panel{position:fixed;inset:0;z-index:350;background:rgba(7,8,10,.97);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:20px}
+.admin-panel.show{display:flex}
+.admin-card{background:var(--bg2);border:1px solid var(--violet);max-width:680px;width:100%;max-height:92vh;overflow-y:auto;padding:32px 30px;position:relative}
+.admin-card h3{font-family:var(--disp);font-weight:700;font-size:15px;text-transform:uppercase;color:var(--violet);margin-bottom:22px}
+.a-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
+@media(max-width:600px){.a-grid{grid-template-columns:1fr 1fr}}
+.a-stat{background:var(--bg3);border:1px solid var(--line2);padding:13px;display:flex;flex-direction:column;gap:2px}
+.a-stat b{font-family:var(--disp);font-weight:700;font-size:20px;color:var(--amber)}
+.a-stat span{font-family:var(--mono);font-size:8.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+.a-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px}
+.a-row:last-child{border-bottom:none}
+.a-row .lbl{color:var(--mut)}
+.a-row .val{color:var(--fg)}
+.a-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.adm-login-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.adm-login-row input{flex:1;background:var(--bg);border:1px solid var(--line2);color:var(--fg);font-family:var(--mono);font-size:13px;padding:11px 12px;outline:none}
+.adm-login-row input:focus{border-color:var(--violet)}
+.adm-err{color:var(--bad);font-size:12px;font-family:var(--mono);display:none;margin-bottom:10px}
+.adm-err.show{display:block}
+.adm-hint{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:14px;text-align:center}
+
+footer{border-top:1px solid var(--line);background:var(--bg2);padding:40px 0 24px;margin-top:0}
+.ft-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:10px;color:#55584a}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,70px);background:var(--bg4);border:1px solid var(--amber);color:var(--fg);font-family:var(--mono);font-size:11px;padding:11px 18px;z-index:600;display:flex;align-items:center;gap:8px;transition:.35s cubic-bezier(.2,.9,.3,1.2);opacity:0;max-width:90vw}
+#toast.show{transform:translate(-50%,0);opacity:1}
+#toast svg{width:13px;height:13px;color:var(--ok);flex-shrink:0}
+
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border:2px solid var(--bg);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:var(--line2)}
+
+@media(hover:hover) and (pointer:fine){
+  #cursor{position:fixed;width:22px;height:22px;border:1px solid rgba(255,176,0,.55);z-index:9999;pointer-events:none;transform:translate(-50%,-50%);transition:width .15s,height .15s,opacity .2s;opacity:0}
+  #cursor::before,#cursor::after{content:'';position:absolute;background:rgba(255,176,0,.55)}
+  #cursor::before{left:50%;top:-5px;width:1px;height:6px;transform:translateX(-50%)}
+  #cursor::after{left:50%;bottom:-5px;width:1px;height:6px;transform:translateX(-50%)}
+  #cursorDot{position:fixed;width:4px;height:4px;background:var(--amber);z-index:9999;pointer-events:none;transform:translate(-50%,-50%);opacity:0}
+}
+</style>
+</head>
+<body>
+<div class="topline"></div>
+<div id="readbar"></div>
+<canvas id="bg"></canvas>
+<div class="orb orb-1"></div><div class="orb orb-2"></div>
+<div id="cursor"></div><div id="cursorDot"></div>
+<div class="page">
+
+<div class="welcome" id="welcome">
+  <div class="w-card">
+    <div class="w-logo"><span class="logo-ic"><i data-lucide="scan-line"></i></span><span>OPEN<em>INTEL</em></span></div>
+    <h2 data-i18n="w_title">Проверяй данные.<br>Прежде чем платить.</h2>
+    <p class="w-sub" data-i18n="w_sub">Номера, ники, ссылки, email, карты — консоль сама определит тип и выдаст вердикт: подделка, скам или чисто.</p>
+    <div class="w-lang">
+      <button data-lang="ru">Русский</button>
+      <button data-lang="en">English</button>
+    </div>
+    <button class="btn primary" id="wStart" disabled><i data-lucide="arrow-right"></i><span data-i18n="w_start">Начать</span></button>
+    <p class="w-note" data-i18n="w_note">Всё работает локально в браузере · без слежки · пароли под хешем</p>
+  </div>
+</div>
+
+<header>
+  <div class="wrap hd">
+    <a class="logo" href="#"><span class="logo-ic"><i data-lucide="scan-line"></i></span>
+      <span><span class="logo-w">OPEN<em>INTEL</em></span><span class="logo-tag" data-i18n="tagline"></span></span></a>
+    <nav>
+      <a href="#console" data-i18n="nav_console"></a><a href="#mods" data-i18n="nav_mods"></a>
+      <a href="#pricing" data-i18n="nav_pricing"></a><a href="#privacy" data-i18n="nav_privacy"></a>
+    </nav>
+    <div class="hd-right">
+      <button class="lang-btn" id="langBtn">RU/EN</button>
+      <div class="pill" id="counterPill"><i data-lucide="zap"></i><span><b id="counterVal">0</b>/<span id="counterMax">0</span></span></div>
+      <div class="user-badge" id="userBadge">
+        <i data-lucide="user" style="width:13px;height:13px;color:var(--mut)"></i>
+        <span id="userName"></span>
+        <span class="plan-tag" id="planTag">—</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="hero wrap">
+  <div class="kicker"><i></i><span data-i18n="hero_kicker"></span></div>
+  <h1 class="wsplit"><span data-i18n="hero_h1a"></span><br><span class="grad" data-i18n="hero_h1b"></span></h1>
+  <p class="hero-sub" data-i18n="hero_sub"></p>
+  <div class="hero-stats">
+    <div class="hstat"><b data-count="12">0</b><span data-i18n="s_mods"></span></div>
+    <div class="hstat"><b data-count="40">0+</b><span data-i18n="s_pats"></span></div>
+    <div class="hstat"><b>0</b><span data-i18n="s_track"></span></div>
+    <div class="hstat"><b data-count="100">0%</b><span data-i18n="s_local"></span></div>
+  </div>
+</div>
+
+<div class="wrap toolbar-wrap"><div class="toolbar" id="toolbar"></div></div>
+
+<div class="wrap" id="console" style="padding-bottom:0">
+  <div class="console" id="conBox">
+    <div class="con-head"><span id="conTitle"></span><span class="hint" data-i18n="con_hint"></span></div>
+    <div class="input-row">
+      <span class="prefix" id="prefix">+</span>
+      <input id="inp" autocomplete="off" spellcheck="false" maxlength="512">
+      <button id="go"><i data-lucide="zap"></i><span data-i18n="analyze"></span></button>
+    </div>
+    <div class="detector" id="detector"></div>
+    <div class="chips"><span class="klabel" data-i18n="examples"></span><span id="chipsBox" style="display:flex;gap:5px;flex-wrap:wrap"></span></div>
+    <div class="history" id="history"></div>
+    <div class="term" id="term"><div class="tplaceholder">//<span class="caret"></span></div></div>
+    <div class="verdict" id="verdict"></div>
+    <div class="risk-panel" id="riskPanel">
+      <div class="risk-top"><span class="risk-verdict" data-i18n="risk_lbl"></span><span class="risk-score" id="riskScore"></span></div>
+      <div class="risk-bar" id="riskBar"></div>
+    </div>
+    <div class="patterns" id="patterns"></div>
+    <div class="tool-out" id="toolOut"></div>
+    <div class="result" id="result"></div>
+    <div class="limit-overlay" id="limitOverlay">
+      <div class="limit-box">
+        <i data-lucide="lock"></i>
+        <h3 data-i18n="limit_t"></h3>
+        <p data-i18n="limit_p"></p>
+        <button class="btn primary" data-act="pay:lite"><i data-lucide="zap"></i><span data-i18n="limit_buy"></span></button>
+        <button class="btn" data-act="plans"><i data-lucide="crown"></i><span data-i18n="limit_plans"></span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="marquee"><div class="mq-track" id="mqTrack"></div></div>
+
+<section class="wrap reveal" id="mods">
+  <div class="sec-head"><span class="sec-num">01 /</span><h2 data-i18n="nav_mods"></h2></div>
+  <p class="sec-sub" data-i18n="mods_sub"></p>
+  <div class="mods" id="modsGrid"></div>
+</section>
+
+<section class="wrap reveal" id="pricing">
+  <div class="sec-head" style="justify-content:center"><h2 data-i18n="nav_pricing"></h2></div>
+  <p class="sec-sub" style="text-align:center;margin:0 auto 4px" data-i18n="pricing_sub"></p>
+  <div class="pricing-grid" id="pricingGrid"></div>
+</section>
+
+<section class="wrap reveal" id="privacy">
+  <div class="sec-head"><span class="sec-num">02 /</span><h2 data-i18n="nav_privacy"></h2></div>
+  <div class="priv-box"><ul id="privList"></ul></div>
+</section>
+
+<footer>
+  <div class="wrap"><div class="ft-bottom">
+    <span>OPENINTEL · <span id="year"></span></span>
+    <span>CSP · SHA-256 · flood-guard · mempool.space · blockscout · toncenter · solana RPC</span>
+  </div></div>
+</footer>
+
+<div id="toast"><i data-lucide="check"></i><span id="toastText"></span></div>
+<div class="adm-banner">ADMIN MODE · UNLIMITED ACCESS</div>
+
+<div class="modal-bg" id="authModal">
+  <div class="modal">
+    <button class="close-x" data-close="authModal"><i data-lucide="x"></i></button>
+    <h3 data-i18n="auth_t"></h3>
+    <label data-i18n="auth_email"></label><input type="email" id="authEmail" placeholder="you@example.com" maxlength="128">
+    <label data-i18n="auth_pass"></label><input type="password" id="authPass" placeholder="6+" maxlength="128">
+    <div class="err-msg" id="authErr"></div>
+    <button class="btn primary" id="btnRegister"><i data-lucide="user-plus"></i><span data-i18n="auth_reg"></span></button>
+    <div class="divider" data-i18n="or"></div>
+    <button class="btn" id="btnLogin"><i data-lucide="log-in"></i><span data-i18n="auth_login"></span></button>
+    <p class="note" data-i18n="auth_note"></p>
+  </div>
+</div>
+
+<div class="modal-bg" id="payModal">
+  <div class="modal">
+    <button class="close-x" data-close="payModal"><i data-lucide="x"></i></button>
+    <h3 id="payTitle"></h3>
+    <p style="font-size:13px;color:var(--mut);margin-bottom:16px" id="payDesc"></p>
+    <div class="net-row" id="netRow"></div>
+    <div id="payBody"></div>
+  </div>
+</div>
+
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-card">
+    <button class="close-x" data-close="adminPanel"><i data-lucide="x"></i></button>
+    <h3><i data-lucide="shield" style="width:15px;height:15px;vertical-align:-2px"></i> ADMIN CONSOLE</h3>
+    <div id="admLogin">
+      <label data-i18n="adm_code"></label>
+      <div class="adm-login-row">
+        <input type="password" id="admCode" maxlength="128" placeholder="••••••••">
+        <button class="btn" id="admEnter"><i data-lucide="key-round"></i></button>
+      </div>
+      <div class="adm-err" id="admErr"></div>
+      <p class="adm-hint" data-i18n="adm_hint"></p>
+    </div>
+    <div id="admDash" style="display:none">
+      <div class="a-grid" id="admStats"></div>
+      <div id="admRows"></div>
+      <div class="a-actions">
+        <button class="btn" id="admExport"><i data-lucide="download"></i><span data-i18n="adm_export"></span></button>
+        <button class="btn" id="admChg"><i data-lucide="key-round"></i><span data-i18n="adm_chgpwd"></span></button>
+        <button class="btn danger" id="admWipe"><i data-lucide="trash-2"></i><span data-i18n="adm_wipe"></span></button>
+        <button class="btn" id="admLogout"><i data-lucide="log-out"></i><span data-i18n="adm_logout"></span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   КОНФИГ. Адреса публичные. Seed-фразы сюда НЕ вставлять!
+   СМЕНИ ADMIN_CODE и ADMIN_KEY перед выкладкой!
+   ============================================================ */
+const CONFIG={
+  BTC_ADDRESS:'bc1qgwqn3q0dmcme7kpsd0wdqeratlshmgky442uqf',
+  ETH_ADDRESS:'0x70bEcd7C2e7e08C8B9c2F96581D7654c65f27d2C',
+  TON_ADDRESS:'UQAgEmz4hA1R8DSgGGlgs0o6hX_b84_2wwslR2170-ebb8Zs',
+  SOL_ADDRESS:'G2Yc58iL9KgtvUvZqXJMCsY4Q2isC7v75KyVoZJ9eweC',
+  USDT_TON_JETTON:'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCix5vUY8rJpsA6t',
+  TONCENTER_API_KEY:'',
+  PRICE_USD:{lite:5,pro:25,biz:75},
+  WINDOW_MIN:30,
+  FALLBACK_PRICES:{bitcoin:95000,ethereum:3400,'the-open-network':5,solana:200,tether:1},
+  FLOOD_LIMIT:20,
+  FLOOD_COOLDOWN:60000,
+  ADMIN_CODE:'Hk7-Violet-Mantis-92',
+  ADMIN_KEY:'A9x!pRime-Falcon#4Qz',
+  ANALYTICS_SITE:'openintel-v1',
+  TELEMETRY_URL:''
+};
+
+const el=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function icons(){try{window.lucide&&lucide.createIcons()}catch(e){}}
+function toast(m){const tEl=el('toast');el('toastText').textContent=String(m).slice(0,140);tEl.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>tEl.classList.remove('show'),2600)}
+function copyText(txt){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>toast(t('copied'))).catch(()=>toast(t('copy_fail')));
+  }else toast(t('copy_fail'));
+}
+window.addEventListener('error',ev=>{try{toast('⚠ '+(ev.message||'error'))}catch(e){}});
+
+/* ФОН */
+(function(){
+  const cv=el('bg'),cx=cv.getContext('2d');
+  let W,H,pts=[],mouse={x:-9999,y:-9999},pings=[];
+  function build(){W=cv.width=innerWidth;H=cv.height=innerHeight;pts=[];for(let y=30;y<H;y+=30)for(let x=30;x<W;x+=30)pts.push([x,y])}
+  build();addEventListener('resize',build);
+  addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+  window._ping=(x,y)=>pings.push({x,y,t:performance.now()});
+  (function loop(){
+    const tm=performance.now();cx.clearRect(0,0,W,H);
+    pings=pings.filter(p=>tm-p.t<2000);
+    for(const[x,y]of pts){
+      let g=Math.pow(Math.max(0,Math.sin(x*.006+y*.006-tm*.001)),14)*.3;
+      const dm=Math.hypot(x-mouse.x,y-mouse.y);
+      if(dm<120)g=Math.max(g,(1-dm/120)*.55);
+      for(const p of pings){const r=(tm-p.t)*.5,d=Math.abs(Math.hypot(x-p.x,y-p.y)-r);if(d<40)g=Math.max(g,(1-d/40)*Math.max(0,1-(tm-p.t)/2000))}
+      if(g>.02){cx.fillStyle=g>.5?'rgba(255,176,0,'+Math.min(g,1)+')':'rgba(232,230,223,'+(g*.2)+')';cx.beginPath();cx.arc(x,y,1+g*1.2,0,7);cx.fill()}
+    }
+    requestAnimationFrame(loop);
+  })();
+})();
+
+/* КУРСОР-ПРИЦЕЛ */
+(function(){
+  if(!matchMedia('(hover:hover) and (pointer:fine)').matches)return;
+  const c=el('cursor'),d=el('cursorDot');
+  let cx=innerWidth/2,cy=innerHeight/2,tx=cx,ty=cy;
+  addEventListener('mousemove',e=>{
+    tx=e.clientX;ty=e.clientY;
+    d.style.left=tx+'px';d.style.top=ty+'px';
+    c.style.opacity=d.style.opacity=1;
+  });
+  addEventListener('mouseleave',()=>{c.style.opacity=d.style.opacity=0});
+  (function follow(){
+    cx+=(tx-cx)*.2;cy+=(ty-cy)*.2;
+    c.style.left=cx+'px';c.style.top=cy+'px';
+    requestAnimationFrame(follow);
+  })();
+  document.addEventListener('mouseover',e=>{
+    const b=e.target.closest('.btn.primary');
+    if(!b)return;
+    const r=b.getBoundingClientRect();
+    const dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
+    if(Math.abs(dx)<r.width&&Math.abs(dy)<r.height)b.style.transform='translate('+dx*.12+'px,'+dy*.12+'px)';
+  });
+  document.addEventListener('mouseout',e=>{
+    const b=e.target.closest('.btn.primary');
+    if(b)b.style.transform='';
+  });
+})();
+
+addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  el('readbar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+},{passive:true});
+
+function bindTilt(){
+  if(!matchMedia('(hover:hover) and (pointer:fine)').matches)return;
+  document.querySelectorAll('.mod').forEach(m=>{
+    if(m._tiltBound)return;m._tiltBound=true;
+    m.addEventListener('mousemove',e=>{
+      const r=m.getBoundingClientRect();
+      const px=(e.clientX-r.left)/r.width,py=(e.clientY-r.top)/r.height;
+      m.style.setProperty('--mx',px*100+'%');m.style.setProperty('--my',py*100+'%');
+      m.style.transform='rotateY('+((px-.5)*10)+'deg) rotateX('+((.5-py)*10)+'deg)';
+    });
+    m.addEventListener('mouseleave',()=>{m.style.transform=''});
+  });
+}
+
+/* ===== СОСТОЯНИЕ ===== */
+const LS='oi_v10';
+let state={user:null,pack:null,pay:null,usage:{date:'',count:0,total:0},history:[],lang:null,usedTx:[],runs:[],events:[],meta:{}};
+try{const s=JSON.parse(localStorage.getItem(LS)||'null');if(s)state=Object.assign(state,s)}catch(e){}
+function save(){try{localStorage.setItem(LS,JSON.stringify(state))}catch(e){}}
+
+/* ===== i18n ===== */
+const I18N={
+ru:{
+ w_title:'Проверяй данные.<br>Прежде чем платить.',
+ w_sub:'Номера, ники, ссылки, email, карты — консоль сама определит тип и выдаст вердикт: подделка, скам или чисто.',
+ w_start:'Начать', w_note:'Всё работает локально в браузере · без слежки · пароли под хешем',
+ tagline:'проверь · прежде чем платить', nav_console:'Консоль',nav_mods:'Модули',nav_pricing:'Тарифы',nav_privacy:'Приватность',
+ anon:'Без пакета',
+ hero_kicker:'анти-мошенник · работает в браузере · без слежки',
+ hero_h1a:'Проверь, кто звонит.', hero_h1b:'Прежде чем платить.',
+ hero_sub:'Вставь номер, ник, ссылку, email или номер карты — консоль определит тип сама и выдаст вердикт с объяснением каждого пункта.',
+ s_mods:'модулей анализа', s_pats:'паттернов риска', s_track:'трекеров и аналитики', s_local:'локально в браузере',
+ group_checks:'Проверки', group_tools:'Инструменты',
+ analyze:'Анализ', examples:'примеры:', history:'история:', con_hint:'/ — фокус · Enter — анализ · Esc — сброс',
+ detect_def:'вставьте номер, ник, ссылку, email, карту или ИНН — модуль переключится при вставке',
+ detect_ok:'определено:', detect_paste:'переключусь при вставке',
+ risk_lbl:'скоринг риска', copied:'Скопировано', copy_fail:'Буфер недоступен',
+ enter_data:'Введите данные для анализа', invalid_email:'невалидный email', invalid_domain:'невалидный домен',
+ invalid_link:'невалидная ссылка', min4:'минимум 4 символа', notbtc:'это не Bitcoin-адрес',
+ flood:'Слишком часто. Подождите минуту.',
+ mq:['Только открытые данные','без деанона','E.164 · NANP · Луна · ИНН','омоглиф-детектор','ончейн-платежи','ничего не уходит на сервер','проверь — прежде чем платить'],
+ limit_t:'Доступ по пакетам',
+ limit_p:'Бесплатных попыток нет. Запусти один полный анализ за $5 (Lite) или выбери Pro/Business.',
+ limit_buy:'Купить запуск · $5', limit_plans:'Смотреть тарифы',
+ auth_t:'Регистрация / Вход', auth_email:'Email', auth_pass:'Пароль',
+ auth_reg:'Создать аккаунт', auth_login:'Войти',
+ or:'или', auth_note:'Аккаунт хранится только в этом браузере. Пароль — SHA-256, мы его не знаем.',
+ reg_ok:'Аккаунт создан. Теперь купи пакет запусков →', reg_bad_email:'Невалидный email', reg_short:'Пароль — минимум 6 символов',
+ reg_exists:'Аккаунт уже есть', login_nf:'Аккаунт не найден', login_bad:'Неверный пароль', login_ok:'С возвращением!',
+ crypto_err:'Web Crypto недоступен. Откройте страницу по HTTPS или localhost.',
+ need_acct:'Сначала создайте аккаунт — он нужен, чтобы привязать пакет запусков.',
+ mods_sub:'Каждый модуль отвечает на практический вопрос: «подозрительно это или нет?». Вставляй что угодно — маршрутизация выберет модуль сама.',
+ pricing_sub:'Пакеты запусков, оплата криптовалютой: BTC · ETH · TON · USDT (TON) · SOL. Сумма по живому курсу, проверка через публичные блокчейн-API, тариф перепроверяется при каждом запуске. Бесплатных попыток нет.',
+ privacy:[
+  ['Ноль телеметрии.','Ни аналитики, ни счётчиков — сайту незачем знать о тебе что-то.'],
+  ['Всё локально.','Аккаунт, пакет, история — только в твоём браузере; данные анализов не покидают машину.'],
+  ['Пароли — только хеш.','SHA-256 с солью: даже при вскрытии браузера твой пароль никто не прочитает.'],
+  ['Геолокация — только своя.','Полный разбор IP с городом показывается исключительно для твоего собственного адреса. По чужим IP — только провайдер и страна сети.'],
+  ['Против мошенников, не против людей.','Мы проверяем подлинность и признаки скама — не местоположение людей. Сервисов «где живёт человек по номеру» не существует: то, что это обещает — фейк или преступление.']],
+ pay_title:'Пакет — ', pay_howto:'Выберите сеть · отправьте точную сумму · для TON/USDT обязательно укажите код-комментарий · вставьте TXID (или мы найдём по коду) · активация после ончейн-проверки',
+ pay_addr:'Адрес для перевода', pay_amount:'Сумма к оплате',
+ pay_memo:'Код-комментарий (обязательно!)',
+ pay_memo_warn:'Без этого кода в комментарии перевод невозможно найти в блокчейне — оплата не засчитается. Скопируйте код и вставьте в поле «Comment/Memo» кошелька.',
+ pay_txid:'TXID / хеш транзакции (после перевода)', pay_txid_opt:'TXID необязателен — мы найдём перевод по коду-комментарию',
+ pay_verify:'Проверить перевод и активировать',
+ pay_verifying:'Ищем перевод в блокчейне…', pay_conf_pending:'Перевод найден, но ещё не подтверждён сетью — подождите пару минут',
+ pay_wrong_amt:'Сумма меньше нужной. Отправьте полную сумму одним переводом',
+ pay_wrong_dst:'Перевод ушёл не на наш адрес', pay_nf:'Перевод не найден. Проверьте сумму, код-комментарий и TXID', pay_used:'Этот TXID уже использован',
+ pay_success:'Оплата подтверждена! Пакет активирован.', pay_demo:'Адреса не настроены — активировать в демо-режиме',
+ pay_price_load:'Загружаем курс…', pay_price_err:'Курс недоступен — суммы приблизительные, проверка строго по отображённой цифре',
+ pay_window:'Окно оплаты', downgrade:'Пакет не подтвердился в блокчейне — доступ приостановлен до оплаты',
+ net_btc:'Bitcoin', net_eth:'Ethereum', net_ton:'TON', net_usdt:'USDT · TON', net_sol:'Solana',
+ welcome_toast:'Добро пожаловать! Всё работает локально.',
+ ph_country:'страна', ph_e164:'формат E.164', ph_struct:'структура', ph_course:'категория линии', ph_op:'оператор',
+ ph_anom:'аномалия цифр', ph_time:'местное время у абонента', ph_night:'— НОЧЬ в регионе номера',
+ ph_score:'скоринг риска', ph_geo:'гео владельца', ph_notrack:'не отслеживается (принцип сервиса)', ph_note:'примечание',
+ struct_ok:'валидна по национальному плану', struct_fail:'невозможен: длина {n} цифр, а по плану {c} — {a}',
+ course_mobile:'мобильная сеть', course_fixed:'фиксированная / географическая', course_tollfree:'бесплатная линия (toll-free)',
+ course_premium:'премиум / платный диапазон', course_personal:'персональный 070', course_nanp:'NANP: area {a}',
+ course_city:'фиксированная · {c}', course_landline:'фиксированная (ABC)', course_loose:'категория по плану (диапазоны вариативны)',
+ course_unknown:'категория по общим правилам', course_film:'фиктивный (555-01xx — из фильмов)',
+ sp_wangiri:'Карибская зона ({a}) из FTC-списка Wangiri: «пропущенный звонок» → платный перезвон',
+ sp_premium:'Платный диапазон: банки и саппорты так не звонят. Перезвон дорогой',
+ sp_uk070:'UK 070 «персональные» — главная фишинговая категория: переадресация куда угодно, дорогой тариф',
+ anom_repeat:'4+ одинаковых цифр подряд — типично для подставных', anom_seq:'последовательность 1234567 — ручная заглушка',
+ pt_night:'Сейчас в регионе номера {t}. Настоящий банк не звонит среди ночи — «звонок банка» в это время — красный флаг.',
+ pt_premium_call:'Не перезванивайте на платные номера: «саппорт» с премиум-тарифом — всегда мошенничество.',
+ pt_wangiri:'Пропущенный с такого номера? Не перезвоните: минута может стоить сотен рублей (схема Wangiri).',
+ pt_phone_ok:'Структура валидна, категория обычная, аномалий нет. Не гарантия честности звонящего — но типичных признаков подставы нет.',
+ pt_clean:'Чисто. Паттерны риска не сработали.',
+ v_phone_ok:'выглядит легитимно', v_phone_sure:'лёгкие сомнения', v_phone_risk:'подозрительный', v_phone_fake:'высокая вероятность подставного',
+ vd_phone_ok:'Номер существует по структуре национального плана', vd_phone_fake:'Такой номер не может быть выдан ни одному абоненту',
+ ph_short:'слишком мало цифр (7–15)', ph_long:'слишком много цифр (E.164 ≤ 15)', ph_nozone:'код страны не найден',
+ tg_len:'длина 5–32', tg_chars:'символы A-z 0-9 _', tg_letter:'начинается с буквы', tg_nodbl:'без __ и _ на конце',
+ tg_cyr_chk:'кириллица', tg_cyr_fail:'в TG невозможна → ник подделан', tg_valid:'валидация TG', tg_valid_ok:'OK',
+ tg_valid_fail:'формат невозможен → перед вами подделка', tg_norm:'нормализованный вид', tg_score:'скоринг фрода', tg_nick:'ник',
+ tg_cyr:'Кириллица внутри ника — официальный аккаунт так назвать нельзя. Визуальная копия чужого имени',
+ tg_disguised:'Скрытая подмена символов (омоглифы/leet): нормализуется в «{c}». Приём мимикрии',
+ tg_brand:'Содержит «{b}» — официальные аккаунты так не называются', tg_fin:'Финансовые триггеры',
+ tg_tail:'Хвост 4+ цифр — «косметика» клонов', tg_short:'Короче 7 символов — часто одноразовые',
+ tg_real:'Префикс «настоящий_» — типичный фейк', tg_bot:'«bot+цифры» — имя скам-бота', tg_clean:'Паттерны фрода не сработали',
+ v_tg_low:'низкий риск', v_tg_att:'будьте внимательны', v_tg_high:'высокий риск', v_tg_scam:'почти наверняка скам',
+ vd_tg_fake:'Это подделка ника', vd_tg_fake_s:'Такой ник в Telegram не существует — визуальная имитация чужого аккаунта',
+ vd_tg_warn_s:'Найдены признаки скам-маскировки', vd_tg_ok_s:'Паттерны фрода не сработали',
+ ck_type:'тип', ck_alg:'алгоритм', ck_sum:'контрольная сумма', ck_ok:'СХОДИТСЯ — номер синтаксически подлинный',
+ ck_fail:'НЕ СХОДИТСЯ — номер поддельный или с опечаткой', ck_only_digits:'в строке не только цифры — нужны карта, IMEI, ИНН или СНИЛС',
+ ck_unknown:'нет известной контрольной суммы для этой длины', ck_number:'номер',
+ pt_ck_ok:'Checksum OK: номер в договоре/чеке как минимум структурно настоящий (не значит — твой).',
+ pt_ck_fail:'Checksum FAIL: такой номер физически не существует. Документ с ним — фальшивый.',
+ v_ck_ok:'Структура подлинная', v_ck_fail:'Поддельный номер',
+ vd_ck_ok:'Контрольная сумма корректна — номер не выдуман на ходу', vd_ck_fail:'Такой номер физически не может существовать',
+ em_local:'локальная часть', em_domain:'домен', em_alias:'алиас', em_canon:'канонический адрес', em_role:'роль vs личный',
+ em_role_r:'роль-аккаунт — за ним не человек', em_role_p:'лично-похожий', em_disp:'одноразовый',
+ em_mx:'MX-записи', em_found:'найдено', em_nomx:'не найдено', em_prov:'провайдер', em_dlv:'доставка',
+ em_can:'возможна', em_dead:'адрес НЕ рабочий',
+ em_alias_plus:'«+»-алиас: всё после плюса игнорируется', em_alias_dots:'Точки игнорируются: тот же ящик, что {a}',
+ em_digits:'5+ цифр подряд — похоже на автогенерацию спамером', em_ok:'Адрес живой, без алиасов и одноразовости',
+ pt_em_disp:'Одноразовый домен: регистрация «на 10 минут». В денежных вопросах — стоп-сигнал.',
+ pt_em_nomx:'Нет MX-записей — домен не принимает почту, адрес фиктивный.',
+ pt_em_alias:'Если этот «новый» адрес требует деньги — это тот же старый ящик.',
+ pt_em_role:'Роль-аккаунт: за info@/support@ организация или никто, не человек.',
+ v_em_disp:'Одноразовая почта', v_em_disp_s:'Регистрация «на 10 минут» — в денежных вопросах стоп-сигнал',
+ v_em_dead:'Адрес не существует', v_em_dead_s:'Домен не принимает почту',
+ v_em_role:'Роль-аккаунт', v_em_role_s:'info@/support@ — за ним организация или никто',
+ v_em_ok:'Личный адрес', type_disp:'одноразовый', type_role:'роль-аккаунт', type_personal:'личный',
+ ip_q_self:'query_my_ip()', ip_src:'источник', ip_isp:'провайдер', ip_asn:'ASN', ip_region:'регион',
+ ip_city:'город', ip_coords:'координаты', ip_priv:'приватность', ip_priv_self:'это ваши данные — видны только на вашем экране',
+ ip_hidden:'скрыто — геолокация чужих IP отключена', ip_notip:'не похоже на IP. Оставьте поле пустым для проверки своего.',
+ ip_country:'страна сети', pt_ip_self:'Геолокация по IP — точка выхода в интернет, может не совпадать с вами.',
+ pt_ip_other:'Приватность по умолчанию: город чужих пользователей не раскрывается.',
+ v_ip_self:'Ваш IP', v_ip_self_s:'Полный разбор — потому что это вы', v_ip_other:'Сетевые данные чужого IP',
+ v_ip_other_s:'Только провайдер и страна — без местоположения',
+ pw_method:'метод', pw_kanon:'k-anonymity — пароль НЕ покидает браузер', pw_leaks:'утечек', pw_times:' раз!',
+ pw_clean:'0 — не найден', pw_struct:'структура',
+ pt_pw_found:'Пароль найден в {n} утечках. Смените его везде, где использовали.',
+ pt_pw_strong:'В утечках не найден, структура хорошая.', pt_pw_weak:'В утечках не найден, но структура слабая — добавьте длину.',
+ v_pw_found:'Пароль скомпрометирован', v_pw_strong:'Пароль надёжен', v_pw_weak:'Пароль слабоват',
+ vd_pw_found_s:'Смените его везде', vd_pw_strong_s:'В утечках не найден', vd_pw_weak_s:'Добавьте длину и разные символы',
+ dn_a:'A (IP сайта)', dn_none:'нет', dn_mx:'MX', dn_ns:'NS', dn_tld:'риск TLD', dn_bad:'дешёвая зона — часто фишинг', dn_good:'нормальная',
+ pt_dn_bad:'Зона .{t} — регистрация почти бесплатная, излюбленная у фишеров.',
+ pt_dn_dead:'Нет A-записи — сайт не работает.', pt_dn_cf:'Cloudflare: реальный IP сервера скрыт за прокси.',
+ pt_dn_alive:'Домен живой, зона нормальная.',
+ v_dn_dead:'Домен мёртв', v_dn_dead_s:'Сайт не работает — A-записей нет',
+ v_dn_risk:'Зона риска', v_dn_risk_s:'Зона любима фишерами', v_dn_ok:'Домен живой', v_dn_ok_s:'Зона нормальная, сайт отвечает',
+ phs_proto:'протокол', phs_domain:'домен', phs_real:'реальный домен', phs_crit:'критичных признаков',
+ pt_sq:'Содержит «{b}», но домен {d} ≠ {b}.com — тайпскваттинг!',
+ pt_cyr_d:'Кириллица в домене — punycode-обман', pt_btld:'Дешёвая зона .{t} — 90% фишинга живёт здесь',
+ pt_nohttps:'Нет HTTPS — данные идут открытым текстом', pt_ipdom:'IP вместо домена',
+ pt_at:'Символ @ в URL — браузер игнорирует всё до @, реальный домен другой!',
+ pt_sub:'Много поддоменов — имитация легитимного сайта', pt_phs_ok:'Явных признаков фишинга не найдено. Всё равно сверяйте домен глазами.',
+ v_phs_high:'Высокий риск фишинга', v_phs_high_s:'Не вводите здесь пароли и данные карт',
+ v_phs_mid:'Подозрительно', v_phs_mid_s:'Один критичный признак — перепроверьте вручную',
+ v_phs_ok:'Выглядит безопасно', v_phs_ok_s:'Критичных признаков нет',
+ btc_fmt:'формат', btc_chain:'блокчейн', btc_bal:'баланс', btc_got:'получено всего', btc_tx:'транзакций',
+ btc_api:'API недоступен; формат валиден', v_btc:'Адрес валиден',
+ enc_none:'формат не распознан: Base64, Hex, URL, Morse, ROT13', enc_n:'Распознано форматов: {n}',
+ sha_n:'3 алгоритма', pw_gen_ready:'passwd_generator: пароль обновляется при каждом изменении',
+ pw_len:'Длина', pw_sets:'Наборы символов', pw_res:'Результат', pw_gen:'Генерировать',
+ copy_report:'Копировать отчёт', open_profile:'Открыть профиль', call:'Позвонить', on_map:'На карте',
+ l8:'длина 8+', low:'строчные', up:'заглавные', dig:'цифры', spec:'спецсимволы',
+ price_once:'единовременно · ончейн-проверка', price_active:'✓ Активен',
+ adm_code:'Код-фраза админа', adm_hint:'F8 — открыть/закрыть панель. Вход: код + ключ из CONFIG.',
+ adm_export:'Экспорт БД', adm_chgpwd:'Сменить код', adm_wipe:'Сброс всех данных', adm_logout:'Выйти',
+ adm_stat_users:'аккаунтов', adm_stat_visits:'визитов всего', adm_stat_todayvisits:'визитов сегодня',
+ adm_stat_rev:'доход (USD)', adm_stat_runs:'всего запусков', adm_stat_todayruns:'запусков сегодня',
+ adm_stat_topmods:'популярные модули',
+ adm_evlog:'журнал событий (последние 10)',
+ ev_visit:'визит', ev_run:'запуск', ev_purchase:'покупка', ev_register:'регистрация',
+ adm_wipe_q1:'УДАЛИТЬ ВСЕ ДАННЫЕ сайта (аккаунты, пакеты, историю)? Действие необратимо.',
+ adm_wipe_q2:'Точно уверены? Введите ключ админа для подтверждения:',
+ adm_chgpwd_q:'Введите новый код-фразу:',
+ adm_pwd_ok:'Код-фраза обновлена', adm_wipe_ok:'Все данные удалены', adm_ok:'Доступ разрешён', adm_bad:'Неверный код-фраза или ключ',
+ adm_on:'ADMIN MODE · ограничения сняты — безлимит', adm_off:'ADMIN MODE выключен',
+},
+en:{
+ w_title:'Verify data.<br>Before you pay.',
+ w_sub:'Phone numbers, usernames, links, emails, card numbers — the console detects the type and gives a verdict: fake, scam or clean.',
+ w_start:'Get started', w_note:'Runs fully in your browser · no tracking · hashed passwords',
+ tagline:'verify · before you pay', nav_console:'Console',nav_mods:'Modules',nav_pricing:'Pricing',nav_privacy:'Privacy',
+ anon:'No pack',
+ hero_kicker:'anti-scam · runs in your browser · no tracking',
+ hero_h1a:'Check who\u2019s calling.', hero_h1b:'Before you pay.',
+ hero_sub:'Paste a number, username, link, email or card number — the console detects the type and issues a verdict explaining every point.',
+ s_mods:'analysis modules', s_pats:'risk patterns', s_track:'trackers & analytics', s_local:'local in browser',
+ group_checks:'Checks', group_tools:'Tools',
+ analyze:'Analyze', examples:'examples:', history:'history:', con_hint:'/ — focus · Enter — run · Esc — reset',
+ detect_def:'paste a number, username, link, email, card or tax ID — module switches on paste',
+ detect_ok:'detected:', detect_paste:'will switch on paste',
+ risk_lbl:'risk score', copied:'Copied', copy_fail:'Clipboard unavailable',
+ enter_data:'Enter data to analyze', invalid_email:'invalid email', invalid_domain:'invalid domain',
+ invalid_link:'invalid link', min4:'min 4 characters', notbtc:'not a Bitcoin address',
+ flood:'Too fast. Wait a minute.',
+ mq:['Open data only','no doxxing','E.164 · NANP · Luhn · INN','homoglyph detector','on-chain payments','nothing leaves your browser','verify — before you pay'],
+ limit_t:'Pay-per-pack access',
+ limit_p:'No free attempts. Run one full analysis for $5 (Lite) or pick Pro / Business.',
+ limit_buy:'Buy a run · $5', limit_plans:'View pricing',
+ auth_t:'Sign up / Sign in', auth_email:'Email', auth_pass:'Password',
+ auth_reg:'Create account', auth_login:'Sign in',
+ or:'or', auth_note:'Account lives only in this browser. Password is SHA-256 hashed — we never see it.',
+ reg_ok:'Account created. Now buy a run pack →', reg_bad_email:'Invalid email', reg_short:'Password — at least 6 chars',
+ reg_exists:'Account already exists', login_nf:'Account not found', login_bad:'Wrong password', login_ok:'Welcome back!',
+ crypto_err:'Web Crypto unavailable. Open the page via HTTPS or localhost.',
+ need_acct:'Create an account first — it links your run pack.',
+ mods_sub:'Each module answers a practical question: “is this suspicious?”. Paste anything — routing picks the module.',
+ pricing_sub:'Run packs paid in crypto: BTC · ETH · TON · USDT (TON) · SOL. Live-rate amounts, verified via public blockchain APIs, re-verified on every launch. No free attempts.',
+ privacy:[
+  ['Zero telemetry.','No analytics, no counters — the site has no reason to know anything about you.'],
+  ['Everything local.','Account, pack, history — only in your browser; analysis data never leaves the machine.'],
+  ['Passwords — hash only.','SHA-256 with salt: even if the browser is inspected, your password is unreadable.'],
+  ['Geolocation — yours only.','Full IP lookup with city is shown exclusively for your own address. Other IPs show network/country only.'],
+  ['Anti-scam, not anti-people.','We verify authenticity and scam patterns — not where people are. “Find a person by number” services do not exist: what they promise is fake or criminal.']],
+ pay_title:'Pack — ', pay_howto:'Pick a network · send the exact amount · for TON/USDT include the memo code · paste TXID (or we find it by code) · activation after on-chain check',
+ pay_addr:'Send to address', pay_amount:'Amount due',
+ pay_memo:'Memo code (required!)',
+ pay_memo_warn:'Without this code in the comment field the transfer cannot be found on-chain — the payment will not count. Copy the code into your wallet\u2019s “Comment/Memo” field.',
+ pay_txid:'TXID / transaction hash (after sending)', pay_txid_opt:'TXID optional — we find the transfer by memo code',
+ pay_verify:'Verify & activate',
+ pay_verifying:'Searching the blockchain…', pay_conf_pending:'Transfer found but not yet confirmed — wait a couple of minutes',
+ pay_wrong_amt:'Amount is less than required. Send the full amount in a single transfer',
+ pay_wrong_dst:'Payment did not go to our address', pay_nf:'Transfer not found. Check amount, memo code and TXID', pay_used:'This TXID was already used',
+ pay_success:'Payment confirmed! Pack activated.', pay_demo:'Addresses not configured — activate in demo mode',
+ pay_price_load:'Fetching rates…', pay_price_err:'Rates unavailable — amounts approximate; verification is strict against the displayed figure',
+ pay_window:'Payment window', downgrade:'Pack not verified on-chain — access suspended until payment',
+ net_btc:'Bitcoin', net_eth:'Ethereum', net_ton:'TON', net_usdt:'USDT · TON', net_sol:'Solana',
+ welcome_toast:'Welcome! Everything runs locally.',
+ ph_country:'country', ph_e164:'E.164 format', ph_struct:'structure', ph_course:'line type', ph_op:'operator',
+ ph_anom:'digit anomaly', ph_time:'local time there', ph_night:'— NIGHT in that region',
+ ph_score:'risk score', ph_geo:'owner geo', ph_notrack:'not tracked (by design)', ph_note:'note',
+ struct_ok:'valid per national plan', struct_fail:'impossible: {n} digits, but {c} plan allows {a}',
+ course_mobile:'mobile network', course_fixed:'fixed / geographic', course_tollfree:'toll-free line',
+ course_premium:'premium / charged range', course_personal:'personal 070', course_nanp:'NANP: area {a}',
+ course_city:'fixed · {c}', course_landline:'fixed (ABC)', course_loose:'per plan (variable ranges)',
+ course_unknown:'by general rules', course_film:'fictional (555-01xx — movie numbers)',
+ sp_wangiri:'Caribbean area ({a}) on the FTC Wangiri list: “missed call” → costly call-back',
+ sp_premium:'Charged range: banks and support desks never call from it. Calling back is expensive',
+ sp_uk070:'UK 070 “personal” — the classic phishing category: forwarding anywhere, high rates',
+ anom_repeat:'4+ repeated digits in a row — typical for fake numbers', anom_seq:'sequence 1234567 — hand-made stub',
+ pt_night:'It is {t} in the number\u2019s region now. Real banks don\u2019t call at night — a “bank call” now is a red flag.',
+ pt_premium_call:'Never call back premium numbers: “support” on a charged line is always fraud.',
+ pt_wangiri:'Missed call from it? Don\u2019t call back: a minute can cost hundreds (Wangiri scheme).',
+ pt_phone_ok:'Structure valid, ordinary category, no anomalies. Not a guarantee of honesty — but no classic red flags.',
+ pt_clean:'Clean. No risk patterns matched.',
+ v_phone_ok:'looks legitimate', v_phone_sure:'slight doubts', v_phone_risk:'suspicious', v_phone_fake:'likely fake',
+ vd_phone_ok:'The number exists per the national numbering plan', vd_phone_fake:'This number could never be assigned to anyone',
+ ph_short:'too few digits (7–15)', ph_long:'too many digits (E.164 ≤ 15)', ph_nozone:'country code not found',
+ tg_len:'length 5–32', tg_chars:'chars A-z 0-9 _', tg_letter:'starts with a letter', tg_nodbl:'no __ or trailing _',
+ tg_cyr_chk:'cyrillic', tg_cyr_fail:'impossible in TG → nickname faked', tg_valid:'TG validation', tg_valid_ok:'OK',
+ tg_valid_fail:'format impossible → this is a spoof', tg_norm:'normalized view', tg_score:'fraud score', tg_nick:'nickname',
+ tg_cyr:'Cyrillic inside a nickname — impossible for real accounts. Visual copy of someone else\u2019s name',
+ tg_disguised:'Hidden character swap (homoglyphs/leet): normalizes to “{c}”. Mimicry trick',
+ tg_brand:'Contains “{b}” — official accounts are never named like this', tg_fin:'Financial triggers',
+ tg_tail:'4+ digit tail — clone “cosmetics”', tg_short:'Shorter than 7 — often throwaway',
+ tg_real:'“the/real/original_” prefix — typical fake', tg_bot:'“bot+digits” — scam-bot naming', tg_clean:'No fraud patterns matched',
+ v_tg_low:'low risk', v_tg_att:'be careful', v_tg_high:'high risk', v_tg_scam:'almost certainly scam',
+ vd_tg_fake:'This is a spoofed nickname', vd_tg_fake_s:'Such a username cannot exist in Telegram — visual imitation',
+ vd_tg_warn_s:'Scam-masquerade signs found', vd_tg_ok_s:'No fraud patterns matched',
+ ck_type:'type', ck_alg:'algorithm', ck_sum:'checksum', ck_ok:'MATCHES — syntactically genuine number',
+ ck_fail:'MISMATCH — fake number or typo', ck_only_digits:'input must be digits only: card, IMEI, INN or SNILS',
+ ck_unknown:'no known checksum for this length', ck_number:'number',
+ pt_ck_ok:'Checksum OK: if this number is in a contract/receipt, it is at least structurally real (not necessarily yours).',
+ pt_ck_fail:'Checksum FAIL: this number cannot physically exist. Any document with it is forged.',
+ v_ck_ok:'Structure genuine', v_ck_fail:'Fake number',
+ vd_ck_ok:'Checksum correct — the number was not invented on the spot', vd_ck_fail:'This number cannot physically exist',
+ em_local:'local part', em_domain:'domain', em_alias:'alias', em_canon:'canonical address', em_role:'role vs personal',
+ em_role_r:'role account — not a person behind it', em_role_p:'looks personal', em_disp:'disposable',
+ em_mx:'MX records', em_found:'found', em_nomx:'none', em_prov:'provider', em_dlv:'delivery',
+ em_can:'possible', em_dead:'address does NOT work',
+ em_alias_plus:'“+”-alias: everything after the plus is ignored', em_alias_dots:'Dots are ignored: same mailbox as {a}',
+ em_digits:'5+ digits in a row — looks spammer-generated', em_ok:'Address is live, no aliases, not disposable',
+ pt_em_disp:'Disposable domain: a “10-minute” registration. In money matters — a stop signal.',
+ pt_em_nomx:'No MX records — the domain accepts no mail; address is fictitious.',
+ pt_em_alias:'If this “new” address asks for money — it is the same old mailbox.',
+ pt_em_role:'Role account: info@/support@ is an organization or nobody, not a person.',
+ v_em_disp:'Disposable email', v_em_disp_s:'A “10-minute” registration — stop signal in money matters',
+ v_em_dead:'Address does not exist', v_em_dead_s:'The domain accepts no mail',
+ v_em_role:'Role account', v_em_role_s:'info@/support@ — an organization or nobody',
+ v_em_ok:'Personal address', type_disp:'disposable', type_role:'role account', type_personal:'personal',
+ ip_q_self:'query_my_ip()', ip_src:'source', ip_isp:'ISP', ip_asn:'ASN', ip_region:'region',
+ ip_city:'city', ip_coords:'coordinates', ip_priv:'privacy', ip_priv_self:'your data — visible only on your screen',
+ ip_hidden:'hidden — geo of other IPs is disabled', ip_notip:'Not an IP. Leave empty to check your own.',
+ ip_country:'network country', pt_ip_self:'IP geolocation is the network exit point — may not match you.',
+ pt_ip_other:'Privacy by default: other users\u2019 cities are never shown.',
+ v_ip_self:'Your IP', v_ip_self_s:'Full lookup — because it\u2019s you', v_ip_other:'Other IP — network data',
+ v_ip_other_s:'ISP and country only — no location',
+ pw_method:'method', pw_kanon:'k-anonymity — the password never leaves the browser', pw_leaks:'leaks', pw_times:' times!',
+ pw_clean:'0 — not found', pw_struct:'strength',
+ pt_pw_found:'Found in {n} leaks. Change it everywhere you used it.',
+ pt_pw_strong:'Not in leaks, good structure.', pt_pw_weak:'Not in leaks, but weak structure — add length.',
+ v_pw_found:'Password compromised', v_pw_strong:'Password is strong', v_pw_weak:'Password is weak',
+ vd_pw_found_s:'Change it everywhere', vd_pw_strong_s:'Not found in leaks', vd_pw_weak_s:'Add length and symbol variety',
+ dn_a:'A (site IP)', dn_none:'none', dn_mx:'MX', dn_ns:'NS', dn_tld:'TLD risk', dn_bad:'cheap zone — phishing favorite', dn_good:'normal',
+ pt_dn_bad:'The .{t} zone costs nearly nothing to register — a phisher favorite.',
+ pt_dn_dead:'No A record — the site is down.', pt_dn_cf:'Cloudflare: the real server IP is hidden behind a proxy.',
+ pt_dn_alive:'Domain is live, zone is normal.',
+ v_dn_dead:'Dead domain', v_dn_dead_s:'Site is down — no A records',
+ v_dn_risk:'Risky zone', v_dn_risk_s:'The zone phishers love', v_dn_ok:'Domain alive', v_dn_ok_s:'Zone normal, site responds',
+ phs_proto:'protocol', phs_domain:'domain', phs_real:'real domain', phs_crit:'critical signs',
+ pt_sq:'Contains “{b}”, but domain {d} ≠ {b}.com — typosquatting!',
+ pt_cyr_d:'Cyrillic in the domain — punycode trick', pt_btld:'Cheap zone .{t} — 90% of phishing lives here',
+ pt_nohttps:'No HTTPS — data travels in clear text', pt_ipdom:'IP instead of a domain',
+ pt_at:'“@” in URL — the browser ignores everything before it; the real domain differs!',
+ pt_sub:'Many subdomains — imitation of a legit site', pt_phs_ok:'No explicit phishing signs. Still double-check the domain visually.',
+ v_phs_high:'High phishing risk', v_phs_high_s:'Do not enter passwords or card data here',
+ v_phs_mid:'Suspicious', v_phs_mid_s:'One critical sign — recheck manually',
+ v_phs_ok:'Looks safe', v_phs_ok_s:'No critical signs',
+ btc_fmt:'format', btc_chain:'blockchain', btc_bal:'balance', btc_got:'total received', btc_tx:'transactions',
+ btc_api:'API unavailable; format valid', v_btc:'Valid address',
+ enc_none:'Format not recognized: Base64, Hex, URL, Morse, ROT13', enc_n:'Formats recognized: {n}',
+ sha_n:'3 algorithms', pw_gen_ready:'passwd_generator: updates on every change',
+ pw_len:'Length', pw_sets:'Character sets', pw_res:'Result', pw_gen:'Generate',
+ copy_report:'Copy report', open_profile:'Open profile', call:'Call', on_map:'On map',
+ l8:'length 8+', low:'lowercase', up:'uppercase', dig:'digits', spec:'specials',
+ price_once:'one-time · on-chain verified', price_active:'✓ Active',
+ adm_code:'Admin pass-phrase', adm_hint:'F8 opens/closes the panel. Login: code + key from CONFIG.',
+ adm_export:'Export DB', adm_chgpwd:'Change code', adm_wipe:'Wipe all data', adm_logout:'Sign out',
+ adm_stat_users:'accounts', adm_stat_visits:'total visits', adm_stat_todayvisits:'visits today',
+ adm_stat_rev:'revenue (USD)', adm_stat_runs:'total runs', adm_stat_todayruns:'runs today',
+ adm_stat_topmods:'top modules',
+ adm_evlog:'event log (last 10)',
+ ev_visit:'visit', ev_run:'run', ev_purchase:'purchase', ev_register:'signup',
+ adm_wipe_q1:'DELETE ALL site data (accounts, packs, history)? This is irreversible.',
+ adm_wipe_q2:'Are you sure? Enter the admin key to confirm:',
+ adm_chgpwd_q:'Enter new pass-phrase:',
+ adm_pwd_ok:'Pass-phrase updated', adm_wipe_ok:'All data wiped', adm_ok:'Access granted', adm_bad:'Wrong code or key',
+ adm_on:'ADMIN MODE · restrictions lifted — unlimited', adm_off:'ADMIN MODE off',
+}};
+function t(k){const d=I18N[state.lang]||I18N.ru;return d[k]!==undefined?d[k]:k}
+function L(str){if(str==null)return'';const p=String(str).split('|');return(state.lang==='en'&&p[1]!==undefined)?p[1]:p[0]}
+function fmt(k,vars){let s=t(k);for(const key in (vars||{}))s=s.replace('{'+key+'}',vars[key]);return s}
+
+function applyLang(){
+  document.documentElement.lang=state.lang==='en'?'en':'ru';
+  document.querySelectorAll('[data-i18n]').forEach(n=>{n.innerHTML=t(n.getAttribute('data-i18n'))});
+  const pv=el('privList');
+  if(pv)pv.innerHTML=t('privacy').map(p=>'<li><i data-lucide="shield-check"></i><span><b>'+esc(p[0])+'</b> '+esc(p[1])+'</span></li>').join('');
+  const un=el('userName');
+  if(un&&!admOK)un.textContent=state.user?(((state.user.email)||'').split('@')[0]||'?'):t('anon');
+  if(window.__ENGINE_READY){
+    renderToolbar();renderMods();renderPricing();
+    setModule(activeModule,{silent:true,keep:true});
+    renderHistory();buildMarquee();
+    if(el('adminPanel').classList.contains('show')&&el('admDash').style.display!=='none')renderAdmin();
+  }
+  if(admOK)updateCounter();
+  icons();
+}
+
+/* АВТОРИЗАЦИЯ */
+function getUsers(){try{return JSON.parse(localStorage.getItem('oi_users')||'{}')}catch(e){return{}}}
+function saveUsers(u){try{localStorage.setItem('oi_users',JSON.stringify(u))}catch(e){}}
+async function hashPass(p){
+  if(!(window.crypto&&crypto.subtle))throw new Error(t('crypto_err'));
+  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('oi-salt:'+p));
+  return Array.from(new Uint8Array(b)).map(x=>('0'+x.toString(16)).slice(-2)).join('');
+}
+function openAuth(){el('authModal').classList.add('show')}
+function closeModal(id){el(id).classList.remove('show')}
+function authErr(m){const e=el('authErr');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',3200)}
+async function doRegister(){
+  try{
+    const email=(el('authEmail').value||'').trim().toLowerCase().slice(0,128),pass=(el('authPass').value||'').slice(0,128);
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){authErr(t('reg_bad_email'));return}
+    if(pass.length<6){authErr(t('reg_short'));return}
+    const users=getUsers();if(users[email]){authErr(t('reg_exists'));return}
+    users[email]={hash:await hashPass(pass)};saveUsers(users);
+    state.user={email:email};save();
+    logEvent('register',{});
+    closeModal('authModal');updateCounter();toast(t('reg_ok'));
+  }catch(e){authErr(e.message)}
+}
+async function doLogin(){
+  try{
+    const email=(el('authEmail').value||'').trim().toLowerCase().slice(0,128),pass=(el('authPass').value||'').slice(0,128);
+    const users=getUsers();
+    if(!users[email]){authErr(t('login_nf'));return}
+    const h=await hashPass(pass);
+    if(users[email].hash===h){}
+    else if(users[email].pass&&users[email].pass===btoa(pass)){users[email].hash=h;delete users[email].pass;saveUsers(users)}
+    else{authErr(t('login_bad'));return}
+    state.user={email:email};save();closeModal('authModal');updateCounter();toast(t('login_ok'));
+  }catch(e){authErr(e.message)}
+}
+
+/* ПАКЕТЫ */
+const PACKS={lite:{limit:1,usd:CONFIG.PRICE_USD.lite,cls:'plan-lite'},
+  pro:{limit:500,usd:CONFIG.PRICE_USD.pro,cls:'plan-pro'},
+  biz:{limit:Infinity,usd:CONFIG.PRICE_USD.biz,cls:'plan-biz'}};
+function currentPack(){return (state.pack&&state.pack.plan)||null}
+function today(){return new Date().toISOString().slice(0,10)}
+function dayCount(){
+  const td=today();
+  if(!state.usage||state.usage.date!==td){
+    state.usage={date:td,count:0,total:(state.usage&&state.usage.total)||0};
+    save();
+  }
+  return state.usage.count||0;
+}
+/* ADM: admOK снимает все ограничения */
+function canRun(){
+  if(admOK)return true;
+  const pk=currentPack();if(!pk)return false;
+  const Lm=PACKS[pk].limit;
+  if(Lm===Infinity)return true;
+  if(pk==='lite')return (state.usage.total||0)<Lm;
+  return dayCount()<Lm;
+}
+function bump(){
+  const pk=currentPack();if(!pk)return;
+  if(pk==='lite'){state.usage.total=(state.usage.total||0)+1}
+  else{dayCount();state.usage.count=(state.usage.count||0)+1}
+  state.runs=(state.runs||[]).concat({t:Date.now(),m:activeModule}).slice(-500);
+  save();updateCounter();
+}
+function updateCounter(){
+  if(admOK){
+    el('counterVal').textContent='∞';
+    el('counterMax').textContent='∞';
+    el('counterPill').classList.remove('warn');
+    const tg=el('planTag');
+    tg.textContent='ADMIN';tg.className='plan-tag plan-admin';
+    el('userName').textContent='root';
+    return;
+  }
+  const pk=currentPack();
+  let left,max;
+  if(!pk){left='—';max='—'}
+  else{const Lm=PACKS[pk].limit;
+    max=Lm===Infinity?'∞':Lm;
+    if(Lm===Infinity)left='∞';
+    else if(pk==='lite')left=Math.max(0,Lm-(state.usage.total||0));
+    else left=Math.max(0,Lm-dayCount());
+  }
+  el('counterVal').textContent=left;
+  el('counterMax').textContent=max;
+  el('counterPill').classList.toggle('warn',pk!==null&&max!=='∞'&&left<=0);
+  const tag=el('planTag');
+  if(pk){tag.textContent=pk.toUpperCase();tag.className='plan-tag '+PACKS[pk].cls}
+  else{tag.textContent='—';tag.className='plan-tag'}
+  el('userName').textContent=state.user?(((state.user.email)||'').split('@')[0]||'?'):t('anon');
+}
+
+/* ИСТОРИЯ */
+function pushHistory(m,v){
+  state.history=[{m:m,v:v}].concat((state.history||[]).filter(h=>!(h.v===v&&h.m===m))).slice(0,8);
+  save();renderHistory();
+}
+function renderHistory(){
+  const h=el('history');
+  if(!state.history||!state.history.length){h.classList.remove('show');return}
+  h.classList.add('show');
+  h.innerHTML='<span class="klabel" style="margin-right:2px">'+esc(t('history'))+'</span>';
+  state.history.forEach(item=>{
+    if(!MODULES[item.m])return;
+    const b=document.createElement('button');b.className='hchip';
+    b.innerHTML='<i data-lucide="'+MODULES[item.m].icon+'"></i><span>'+esc(item.v.slice(0,26))+'</span>';
+    b.addEventListener('click',function(){setModule(item.m,{keep:true});el('inp').value=item.v;run()});
+    h.appendChild(b);
+  });
+  icons();
+}
+
+/* СЧЁТЧИК ВИЗИТОВ + ЖУРНАЛ + ТЕЛЕМЕТРИЯ */
+async function trackVisit(){
+  try{
+    const site=encodeURIComponent(CONFIG.ANALYTICS_SITE);
+    const hit=await fetch('https://abacus.jasoncameron.dev/hit/'+site+'/visits').then(r=>r.text());
+    state.meta=state.meta||{};
+    state.meta.myVisitNo=parseInt(hit,10)||0;
+    save();
+    logEvent('visit',{n:parseInt(hit,10)||0});
+  }catch(e){}
+}
+function logEvent(type,data){
+  try{
+    state.events=(state.events||[]);
+    state.events.push({t:Date.now(),type:type,data:data||{}});
+    if(state.events.length>500)state.events=state.events.slice(-300);
+    save();
+  }catch(e){}
+}
+function telemetry(ev,data){
+  if(!CONFIG.TELEMETRY_URL)return;
+  try{navigator.sendBeacon(CONFIG.TELEMETRY_URL,JSON.stringify({ev:ev,d:data||{},ts:Date.now()}))}catch(e){}
+}
+
+/* ===== ДАННЫЕ НУМЕРАЦИИ ===== */
+const ZONES=[
+['7','RU','Россия|Russia','UTC+2…+12','RUB','cis',3],['380','UA','Украина|Ukraine','UTC+2','UAH','cis',2],
+['375','BY','Беларусь|Belarus','UTC+3','BYN','cis',3],['998','UZ','Узбекистан|Uzbekistan','UTC+5','UZS','cis',5],
+['77','KZ','Казахстан|Kazakhstan','UTC+5…+6','KZT','cis',5],['76','KZ','Казахстан|Kazakhstan','UTC+5…+6','KZT','cis',5],
+['996','KG','Кыргызстан|Kyrgyzstan','UTC+6','KGS','cis',6],['992','TJ','Таджикистан|Tajikistan','UTC+5','TJS','cis',5],
+['993','TM','Туркменистан|Turkmenistan','UTC+5','TMT','cis',5],['994','AZ','Азербайджан|Azerbaijan','UTC+4','AZN','cis',4],
+['374','AM','Армения|Armenia','UTC+4','AMD','cis',4],['995','GE','Грузия|Georgia','UTC+4','GEL','cis',4],
+['373','MD','Молдова|Moldova','UTC+2','MDL','cis',2],['371','LV','Латвия|Latvia','UTC+2','EUR','cis',2],
+['370','LT','Литва|Lithuania','UTC+2','EUR','cis',2],['372','EE','Эстония|Estonia','UTC+2','EUR','cis',2],
+['49','DE','Германия|Germany','UTC+1','EUR','eu',1],['33','FR','Франция|France','UTC+1','EUR','eu',1],
+['44','GB','Великобритания|United Kingdom','UTC+0','GBP','eu',0],['39','IT','Италия|Italy','UTC+1','EUR','eu',1],
+['34','ES','Испания|Spain','UTC+1','EUR','eu',1],['48','PL','Польша|Poland','UTC+1','PLN','eu',1],
+['31','NL','Нидерланды|Netherlands','UTC+1','EUR','eu',1],['32','BE','Бельгия|Belgium','UTC+1','EUR','eu',1],
+['43','AT','Австрия|Austria','UTC+1','EUR','eu',1],['41','CH','Швейцария|Switzerland','UTC+1','CHF','eu',1],
+['351','PT','Португалия|Portugal','UTC+0','EUR','eu',0],['353','IE','Ирландия|Ireland','UTC+0','EUR','eu',0],
+['45','DK','Дания|Denmark','UTC+1','DKK','eu',1],['46','SE','Швеция|Sweden','UTC+1','SEK','eu',1],
+['47','NO','Норвегия|Norway','UTC+1','NOK','eu',1],['358','FI','Финляндия|Finland','UTC+2','EUR','eu',2],
+['30','GR','Греция|Greece','UTC+2','EUR','eu',2],['40','RO','Румыния|Romania','UTC+2','RON','eu',2],
+['36','HU','Венгрия|Hungary','UTC+1','HUF','eu',1],['420','CZ','Чехия|Czechia','UTC+1','CZK','eu',1],
+['421','SK','Словакия|Slovakia','UTC+1','EUR','eu',1],['385','HR','Хорватия|Croatia','UTC+1','EUR','eu',1],
+['386','SI','Словения|Slovenia','UTC+1','EUR','eu',1],['381','RS','Сербия|Serbia','UTC+1','RSD','eu',1],
+['387','BA','Босния и Герцеговина|Bosnia','UTC+1','BAM','eu',1],['389','MK','Сев. Македония|N. Macedonia','UTC+1','MKD','eu',1],
+['355','AL','Албания|Albania','UTC+1','ALL','eu',1],['359','BG','Болгария|Bulgaria','UTC+2','BGN','eu',2],
+['356','MT','Мальта|Malta','UTC+1','EUR','eu',1],['357','CY','Кипр|Cyprus','UTC+2','EUR','eu',2],
+['376','AD','Андорра|Andorra','UTC+1','EUR','eu',1],['377','MC','Монако|Monaco','UTC+1','EUR','eu',1],
+['378','SM','Сан-Марино|San Marino','UTC+1','EUR','eu',1],['383','XK','Косово|Kosovo','UTC+1','EUR','eu',1],
+['382','ME','Черногория|Montenegro','UTC+1','EUR','eu',1],['352','LU','Люксембург|Luxembourg','UTC+1','EUR','eu',1],
+['354','IS','Исландия|Iceland','UTC+0','ISK','eu',0],['298','FO','Фарерские о-ва|Faroe Is.','UTC+0','DKK','eu',0],
+['1','US','США|USA','UTC−5…−10','USD','us',-5],['1','CA','Канада|Canada','UTC−3:30…−8','CAD','us',-5],
+['86','CN','Китай|China','UTC+8','CNY','asia',8],['81','JP','Япония|Japan','UTC+9','JPY','asia',9],
+['82','KR','Южная Корея|South Korea','UTC+9','KRW','asia',9],['91','IN','Индия|India','UTC+5:30','INR','asia',5.5],
+['92','PK','Пакистан|Pakistan','UTC+5','PKR','asia',5],['880','BD','Бангладеш|Bangladesh','UTC+6','BDT','asia',6],
+['94','LK','Шри-Ланка|Sri Lanka','UTC+5:30','LKR','asia',5.5],['977','NP','Непал|Nepal','UTC+5:45','NPR','asia',5.75],
+['975','BT','Бутан|Bhutan','UTC+6','BTN','asia',6],['976','MN','Монголия|Mongolia','UTC+8','MNT','asia',8],
+['60','MY','Малайзия|Malaysia','UTC+8','MYR','asia',8],['65','SG','Сингапур|Singapore','UTC+8','SGD','asia',8],
+['66','TH','Таиланд|Thailand','UTC+7','THB','asia',7],['84','VN','Вьетнам|Vietnam','UTC+7','VND','asia',7],
+['62','ID','Индонезия|Indonesia','UTC+7…+9','IDR','asia',7],['63','PH','Филиппины|Philippines','UTC+8','PHP','asia',8],
+['855','KH','Камбоджа|Cambodia','UTC+7','KHR','asia',7],['856','LA','Лаос|Laos','UTC+7','LAK','asia',7],
+['95','MM','Мьянма|Myanmar','UTC+6:30','MMK','asia',6.5],['98','IR','Иран|Iran','UTC+3:30','IRR','asia',3.5],
+['964','IQ','Ирак|Iraq','UTC+3','IQD','asia',3],['966','SA','Саудовская Аравия|Saudi Arabia','UTC+3','SAR','asia',3],
+['971','AE','ОАЭ|UAE','UTC+4','AED','asia',4],['972','IL','Израиль|Israel','UTC+2','ILS','asia',2],
+['974','QA','Катар|Qatar','UTC+3','QAR','asia',3],['973','BH','Бахрейн|Bahrain','UTC+3','BHD','asia',3],
+['965','KW','Кувейт|Kuwait','UTC+3','KWD','asia',3],['968','OM','Оман|Oman','UTC+4','OMR','asia',4],
+['962','JO','Иордания|Jordan','UTC+3','JOD','asia',3],['961','LB','Ливан|Lebanon','UTC+2','LBP','asia',2],
+['963','SY','Сирия|Syria','UTC+3','SYP','asia',3],['90','TR','Турция|Turkey','UTC+3','TRY','asia',3],
+['93','AF','Афганистан|Afghanistan','UTC+4:30','AFN','asia',4.5],['886','TW','Тайвань|Taiwan','UTC+8','TWD','asia',8],
+['852','HK','Гонконг|Hong Kong','UTC+8','HKD','asia',8],['853','MO','Макао|Macao','UTC+8','MOP','asia',8],
+['20','EG','Египет|Egypt','UTC+2','EGP','other',2],['212','MA','Марокко|Morocco','UTC+1','MAD','other',1],
+['213','DZ','Алжир|Algeria','UTC+1','DZD','other',1],['216','TN','Тунис|Tunisia','UTC+1','TND','other',1],
+['218','LY','Ливия|Libya','UTC+2','LYD','other',2],['234','NG','Нигерия|Nigeria','UTC+1','NGN','other',1],
+['254','KE','Кения|Kenya','UTC+3','KES','other',3],['27','ZA','ЮАР|South Africa','UTC+2','ZAR','other',2],
+['251','ET','Эфиопия|Ethiopia','UTC+3','ETB','other',3],['52','MX','Мексика|Mexico','UTC−6','MXN','other',-6],
+['55','BR','Бразилия|Brazil','UTC−3','BRL','other',-3],['54','AR','Аргентина|Argentina','UTC−3','ARS','other',-3],
+['56','CL','Чили|Chile','UTC−4','CLP','other',-4],['57','CO','Колумбия|Colombia','UTC−5','COP','other',-5],
+['51','PE','Перу|Peru','UTC−5','PEN','other',-5],['58','VE','Венесуэла|Venezuela','UTC−4','VES','other',-4],
+['61','AU','Австралия|Australia','UTC+8…+10','AUD','other',10],['64','NZ','Новая Зеландия|New Zealand','UTC+12','NZD','other',12],
+].map(r=>({code:r[0],iso:r[1],name:r[2],tz:r[3],cur:r[4],region:r[5],utc:r[6]})).sort((a,b)=>b.code.length-a.code.length);
+const OPERATORS={
+UZ:{'20':'Perfectum','88':'Uzmobile (Uztelecom)','90':'Beeline UZ','91':'Beeline UZ','93':'Uzmobile (Uztelecom)','94':'Uzmobile (Uztelecom)','97':'Ucell','99':'Mobiuz (Unitel)','71':'Ташкент (стационар)|Tashkent (landline)','78':'Ташкент (стационар)|Tashkent (landline)','79':'Ташкентская обл.|Tashkent region'},
+RU:{'900':'Ростелеком|Rostelecom','901':'Билайн|Beeline','902':'Мегафон|MegaFon','903':'Билайн|Beeline','904':'Tele2','905':'Билайн|Beeline','906':'Билайн|Beeline','908':'Мотив|Motive','909':'Билайн|Beeline','910':'МТС|MTS','911':'МТС|MTS','912':'МТС|MTS','913':'МТС|MTS','914':'МТС|MTS','915':'МТС|MTS','916':'МТС|MTS','917':'МТС|MTS','918':'МТС|MTS','919':'МТС|MTS','920':'Мегафон|MegaFon','921':'Мегафон|MegaFon','922':'Мегафон|MegaFon','923':'Мегафон|MegaFon','924':'Мегафон|MegaFon','925':'Мегафон|MegaFon','926':'Мегафон|MegaFon','927':'Мегафон|MegaFon','928':'Мегафон|MegaFon','929':'Мегафон|MegaFon','930':'Мегафон|MegaFon','931':'Мегафон|MegaFon','932':'Мегафон|MegaFon','933':'Мегафон|MegaFon','934':'Мегафон|MegaFon','936':'Мегафон|MegaFon','937':'Мегафон|MegaFon','938':'Мегафон|MegaFon','939':'Мегафон|MegaFon','941':'Yota','942':'Yota','943':'Yota','944':'Yota','945':'Yota','946':'Yota','947':'Yota','948':'Yota','949':'Yota','950':'Билайн|Beeline','951':'Билайн|Beeline','952':'Билайн|Beeline','953':'Билайн|Beeline','958':'виртуальные|MVNO','960':'Билайн|Beeline','961':'Билайн|Beeline','962':'Билайн|Beeline','963':'Билайн|Beeline','964':'Билайн|Beeline','965':'Билайн|Beeline','966':'Билайн|Beeline','967':'Билайн|Beeline','968':'Билайн|Beeline','969':'Билайн|Beeline','977':'МТС|MTS','978':'МТС / Волна|MTS / Volna','979':'МТС|MTS','980':'МТС|MTS','981':'МТС|MTS','982':'МТС|MTS','983':'МТС|MTS','984':'МТС|MTS','985':'МТС|MTS','986':'МТС|MTS','987':'МТС|MTS','988':'МТС|MTS','989':'МТС|MTS','993':'Tele2','994':'Билайн|Beeline','995':'Tele2','996':'Tele2','997':'Tele2','999':'Yota / Т-Мобайл|Yota / T-Mobile'},
+KZ:{'700':'Altel / Tele2','701':'Kcell','702':'Beeline KZ','705':'Activ','707':'Kcell','708':'Altel 4G','747':'Tele2 KZ','750':'Tele2 KZ','751':'Tele2 KZ','775':'Beeline KZ','776':'Beeline KZ','777':'Beeline KZ','778':'Beeline KZ'},
+BY:{'25':'life:)','29':'A1 (Velcom)','33':'MTS BY','44':'A1 (Velcom)','17':'Минск (стационар)|Minsk (landline)'},
+UA:{'39':'Київстар|Kyivstar','50':'Vodafone UA','63':'lifecell','66':'Vodafone UA','67':'Київстар|Kyivstar','68':'Київстар|Kyivstar','73':'lifecell','93':'lifecell','95':'Vodafone UA','96':'Київстар|Kyivstar','97':'Київстар|Kyivstar','98':'Київстар|Kyivstar','99':'Vodafone UA'},
+MD:{'60':'Moldcell','61':'Orange MD','62':'Moldcell','67':'Orange MD','68':'Orange MD','69':'Orange MD','76':'Moldcell','77':'Orange MD','78':'Moldcell','79':'Orange MD'},
+GE:{'5':'Мобильные (Magti/Silknet/Beeline)|Mobile (Magti/Silknet/Beeline)','32':'Тбилиси|Tbilisi'},
+AM:{'41':'Ucom','43':'Viva-MTS','44':'Viva-MTS','49':'Ucom','55':'Viva-MTS','77':'Viva-MTS','91':'Viva-MTS','93':'Viva-MTS','94':'Viva-MTS','95':'Ucom','96':'Viva-MTS','98':'Ucom','99':'Viva-MTS'},
+AZ:{'50':'Azercell','51':'Azercell','55':'Bakcell','70':'Nar','77':'Nar','99':'Azercell','12':'Баку|Baku'},
+KG:{'22':'MegaCom','50':'Beeline KG','51':'Beeline KG','55':'O!','70':'O!','77':'Beeline KG','99':'O!'},
+TJ:{'40':'Babilon-M','41':'Babilon-M','44':'Tcell','50':'Megafon TJ','55':'Tcell','77':'Tcell','88':'Tcell','90':'Babilon-M','91':'Babilon-M','92':'Tcell','93':'Tcell'},
+TM:{'65':'Altyn Asyr','66':'Altyn Asyr','71':'TM Cell','91':'TM Cell','12':'Ашхабад|Ashgabat'},
+LT:{'6':'Мобильные (Telia/Bite/Tele2)|Mobile (Telia/Bite/Tele2)','5':'Вильнюс|Vilnius'},
+LV:{'2':'Мобильные (LMT/Tele2/Bite)|Mobile (LMT/Tele2/Bite)'},
+EE:{'5':'Мобильные (Telia/Tele2/Elisa)|Mobile (Telia/Tele2/Elisa)'},
+DE:{'15':'Мобильные|Mobile','16':'Мобильные (Vodafone)|Mobile (Vodafone)','17':'Мобильные (Telekom)|Mobile (Telekom)','30':'Берлин|Berlin','40':'Гамбург|Hamburg','69':'Франкфурт|Frankfurt','89':'Мюнхен|Munich'},
+FR:{'6':'Мобильные|Mobile','7':'Мобильные|Mobile','1':'Регионы (стационар)|Regions (landline)'},
+GB:{'7':'Мобильные (EE/O2/Vodafone/Three)|Mobile (EE/O2/Vodafone/Three)','20':'Лондон|London','1':'Регионы|Regions'},
+IT:{'3':'Мобильные (TIM/Vodafone/Wind)|Mobile (TIM/Vodafone/Wind)','06':'Рим|Rome','02':'Милан|Milan'},
+ES:{'6':'Мобильные|Mobile','7':'Мобильные|Mobile','91':'Мадрид|Madrid','93':'Барселона|Barcelona'},
+PL:{'5':'Мобильные|Mobile','6':'Мобильные|Mobile','7':'Мобильные|Mobile','22':'Варшава|Warsaw'},
+CN:{'1':'Мобильные (Mobile/Unicom/Telecom)|Mobile (Mobile/Unicom/Telecom)'},
+IN:{'9':'Мобильные|Mobile','8':'Мобильные|Mobile','7':'Мобильные|Mobile','6':'Мобильные|Mobile'},
+JP:{'70':'Мобильные|Mobile','80':'Мобильные|Mobile','90':'Мобильные|Mobile','3':'Токио|Tokyo'},
+TR:{'5':'Мобильные (Turkcell/Vodafone TR)|Mobile (Turkcell/Vodafone TR)'},
+IR:{'9':'Мобильные (MCI/Irancell)|Mobile (MCI/Irancell)'},
+AE:{'50':'Etisalat','52':'Du','54':'Du','55':'Etisalat','56':'Etisalat','58':'Du'},
+SA:{'5':'Мобильные (STC/Mobily/Zain)|Mobile (STC/Mobily/Zain)'},
+IL:{'5':'Мобильные|Mobile'},
+EG:{'10':'Vodafone EG','11':'Etisalat EG','12':'Orange EG','15':'WE'},
+};
+const RU_ABC={'495':'Москва|Moscow','499':'Москва|Moscow','812':'Санкт-Петербург|St. Petersburg','343':'Екатеринбург|Yekaterinburg','383':'Новосибирск|Novosibirsk','351':'Челябинск|Chelyabinsk','843':'Казань|Kazan','861':'Краснодар|Krasnodar','863':'Ростов-на-Дону|Rostov-on-Don','831':'Нижний Новгород|Nizhny Novgorod','846':'Самара|Samara','342':'Пермь|Perm','347':'Уфа|Ufa','391':'Красноярск|Krasnoyarsk','423':'Владивосток|Vladivostok','381':'Омск|Omsk','473':'Воронеж|Voronezh','395':'Иркутск|Irkutsk','421':'Хабаровск|Khabarovsk','867':'Махачкала|Makhachkala','471':'Курск|Kursk','8442':'Волгоград|Volgograd','8152':'Мурманск|Murmansk','8182':'Архангельск|Arkhangelsk','4242':'Южно-Сахалинск|Yuzhno-Sakhalinsk'};
+const NANP={'212':'Нью-Йорк|New York','646':'Нью-Йорк|New York','718':'Нью-Йорк|New York','917':'Нью-Йорк (моб.)|New York (mob.)','213':'Лос-Анджелес|Los Angeles','323':'Лос-Анджелес|Los Angeles','310':'Лос-Анджелес|Los Angeles','415':'Сан-Франциско|San Francisco','510':'Окленд|Oakland','408':'Сан-Хосе|San Jose','650':'Сан-Матео|San Mateo','312':'Чикаго|Chicago','773':'Чикаго|Chicago','202':'Вашингтон|Washington','305':'Майами|Miami','786':'Майами|Miami','617':'Бостон|Boston','857':'Бостон|Boston','215':'Филадельфия|Philadelphia','713':'Хьюстон|Houston','214':'Даллас|Dallas','469':'Даллас|Dallas','602':'Финикс|Phoenix','303':'Денвер|Denver','206':'Сиэтл|Seattle','503':'Портленд|Portland','416':'Торонто|Toronto','647':'Торонто|Toronto','604':'Ванкувер|Vancouver','514':'Монреаль|Montreal','403':'Калгари|Calgary','780':'Эдмонтон|Edmonton','204':'Виннипег|Winnipeg','902':'Галифакс|Halifax'};
+const WANGIRI=['242','246','264','268','284','345','441','473','649','664','670','671','684','721','758','767','784','787','809','829','849','868','869','876','939'];
+const RULES={
+RU:{lens:[10],mob:/^9\d{9}$/,geo:n=>/^[3-8]/.test(n),hint:'в РФ нац. номер — 10 цифр: 9xx (моб.) или 3xx–8xx (город)|RU national number is 10 digits: 9xx (mobile) or 3xx–8xx (landline)'},
+UA:{lens:[9],mob:/^(39|50|63|66|67|68|73|9[1-9])\d{7}$/,hint:'в UA — 9 цифр после +380|UA uses 9 digits after +380'},
+UZ:{lens:[9],mob:n=>!!OPERATORS.UZ[n.slice(0,2)],hint:'в UZ — 9 цифр: моб. 88/90/9x, Ташкент 71/78/79|UZ uses 9 digits: mobile 88/90/9x, Tashkent 71/78/79'},
+KZ:{lens:[10],mob:n=>!!OPERATORS.KZ[n.slice(0,3)],hint:'в KZ — 10 цифр после +7, моб. 70x–77x|KZ uses 10 digits after +7, mobile 70x–77x'},
+BY:{lens:[9],mob:/^(25|29|33|44)\d{7}$/,hint:'в BY — 9 цифр: моб. 25/29/33/44|BY uses 9 digits: mobile 25/29/33/44'},
+GB:{lens:[10],mob:/^7[1-9]\d{8}$/,geo:n=>/^1/.test(n),premium:/^(9\d|87[1-3])\d{7}$/,free:/^80[08]\d{7}$/,personal:/^70\d{8}$/,hint:'GB: моб. 7xxx, гео 1xxx, 070 «персональные», 09xx премиум|GB: mobile 7xxx, geo 1xxx, 070 personal, 09xx premium'},
+DE:{lens:[8,9,10,11],loose:true,mob:/^1[567]\d{7,9}$/,hint:'длина в DE варьируется по городу|DE length varies by city'},
+US:{lens:[10],nanp:true,hint:'NANP: 10 цифр|NANP: 10 digits'},CA:{lens:[10],nanp:true,hint:'NANP: 10 цифр|NANP: 10 digits'},
+TR:{lens:[10],mob:/^5\d{9}$/,hint:'в TR — 10 цифр, моб. 5xx|TR uses 10 digits, mobile 5xx'},
+FR:{lens:[9],mob:/^[67]\d{8}$/,hint:'в FR — 9 цифр, моб. 6/7|FR uses 9 digits, mobile 6/7'},
+IT:{lens:[9,10],loose:true,mob:/^3\d{8,9}$/,hint:'длина в IT варьируется|IT length varies'},
+ES:{lens:[9],mob:/^[67]\d{8}$/,hint:'в ES — 9 цифр, моб. 6/7|ES uses 9 digits, mobile 6/7'},
+PL:{lens:[9],mob:/^[567]\d{8}$/,hint:'в PL — 9 цифр, моб. 5/6/7|PL uses 9 digits, mobile 5/6/7'},
+};
+
+function parsePhone(raw){
+  const s=String(raw||'').trim();
+  const plus=s.charAt(0)==='+';
+  let d=s.replace(/\D/g,'');
+  if(!d)return{error:'empty'};
+  if(!plus&&d.length===11&&d.charAt(0)==='8')d='7'+d.slice(1);
+  if(!plus&&d.length===10)d='7'+d;
+  if(d.length<7)return{error:'short'};
+  if(d.length>15)return{error:'long'};
+  const z=ZONES.find(z=>d.indexOf(z.code)===0);
+  if(!z)return{error:'nozone'};
+  let code=z.code,iso=z.iso,name=z.name,tz=z.tz,cur=z.cur,region=z.region,utc=z.utc,note='';
+  if(code==='7'){
+    const d2=d.charAt(1);
+    if(d2==='7'||d2==='6'){iso='KZ';name='Казахстан|Kazakhstan';tz='UTC+5…+6';cur='KZT';utc=5;note='Зона +7: 7xx/6xx — Казахстан, 3xx/4xx/8xx/9xx — Россия|+7 split: 7xx/6xx Kazakhstan, 3xx/4xx/8xx/9xx Russia'}
+    else{iso='RU'}
+  }
+  const nat=d.slice(code.length);
+  const op=OPERATORS[iso];
+  const operator=op?(op[nat.slice(0,3)]||op[nat.slice(0,2)]||op[nat.slice(0,1)]||null):null;
+  const R=RULES[iso];
+  let structOk=true,structInfo=null,courseKey='course_unknown',courseVar={},special=null;
+  if(R){
+    if(R.lens.indexOf(nat.length)<0){structOk=false;structInfo={len:nat.length,allowed:R.lens.join('/'),hint:R.hint}}
+    if(R.nanp){
+      const area=nat.slice(0,3),exch=nat.slice(3,6);
+      const aOk=/^[2-9]/.test(area)&&!/11$/.test(area),eOk=/^[2-9]/.test(exch);
+      if(WANGIRI.indexOf(area)>=0){special={key:'sp_wangiri',pts:35,v:area};courseKey='course_nanp';courseVar={a:area}}
+      else if(/^8(00|33|44|55|66|77|88)/.test(nat))courseKey='course_tollfree';
+      else if(/^900/.test(nat)){courseKey='course_premium';special={key:'sp_premium',pts:40}}
+      else if(area==='555'&&nat.slice(3,5)==='01')courseKey='course_film';
+      else{courseKey='course_nanp';courseVar={a:area+(NANP[area]?' · '+L(NANP[area]):'')}}
+      if(!aOk||!eOk){structOk=false;structInfo={len:nat.length,allowed:'N00',hint:'NANP N[2-9]X|NANP N[2-9]X'}}
+    }else if(R.personal&&R.personal.test(nat)){courseKey='course_personal';special={key:'sp_uk070',pts:50}}
+    else if(R.premium&&R.premium.test(nat)){courseKey='course_premium';special={key:'sp_premium',pts:40}}
+    else if(R.free&&R.free.test(nat))courseKey='course_tollfree';
+    else if(R.mob&&(typeof R.mob==='function'?R.mob(nat):R.mob.test(nat)))courseKey='course_mobile';
+    else if(R.geo&&(typeof R.geo==='function'?R.geo(nat):R.geo.test(nat)))courseKey='course_fixed';
+    else if(R.loose)courseKey='course_loose';
+    if(structOk&&courseKey==='course_fixed'){
+      const city=RU_ABC[nat.slice(0,4)]||RU_ABC[nat.slice(0,3)];
+      if(city){courseKey='course_city';courseVar={c:L(city)}}
+      else courseKey='course_landline';
+    }
+  }else{
+    if(operator)courseKey='course_mobile';
+  }
+  let anomKey=null;
+  if(/(\d)\1{4,}/.test(nat))anomKey='anom_repeat';
+  else if(nat.indexOf('1234567')>=0)anomKey='anom_seq';
+  const local=new Date(Date.now()+utc*3600000);
+  const hh=local.getUTCHours(),mm=local.getUTCMinutes();
+  const night=hh>=23||hh<6;
+  const localTime=('0'+hh).slice(-2)+':'+('0'+mm).slice(-2);
+  let pretty='+'+code+' '+nat;
+  if((iso==='US'||iso==='CA')&&nat.length===10)pretty='+1 '+nat.slice(0,3)+' '+nat.slice(3,6)+' '+nat.slice(6);
+  else if(nat.length===9)pretty='+'+code+' '+nat.slice(0,2)+' '+nat.slice(2,5)+' '+nat.slice(5,7)+' '+nat.slice(7);
+  else if(nat.length===10)pretty='+'+code+' '+nat.slice(0,3)+' '+nat.slice(3,6)+'-'+nat.slice(6,8)+'-'+nat.slice(8);
+  else if(nat.length===11)pretty='+'+code+' '+nat.slice(0,3)+' '+nat.slice(3,7)+'-'+nat.slice(7,9)+'-'+nat.slice(9,11);
+  return{code:code,nat:nat,e164:'+'+code+nat,pretty:pretty,iso:iso,name:name,tz:tz,cur:cur,region:region,
+    structOk:structOk,structInfo:structInfo,courseKey:courseKey,courseVar:courseVar,special:special,anomKey:anomKey,
+    operator:operator,note:note,localTime:localTime,night:night,valid:d.length>=8};
+}
+
+const CONF={'а':'a','е':'e','о':'o','р':'p','с':'c','у':'y','х':'x','к':'k','в':'b','м':'m','т':'t','н':'h','0':'o','1':'l','3':'e','4':'a','5':'s','7':'t','8':'b','$':'s'};
+function parseTg(raw){
+  let u=String(raw||'').trim().replace(/^https?:\/\/t\.me\//i,'').replace(/^t\.me\//i,'').replace(/^@/,'').slice(0,64);
+  if(!u)return{error:'empty'};
+  const hasCyr=/[а-яёА-ЯЁ]/.test(u);
+  const canon=u.toLowerCase().split('').map(c=>CONF[c]||c).join('');
+  const disguised=canon!==u.toLowerCase();
+  const checks=[
+    {k:'tg_len',ok:u.length>=5&&u.length<=32,v:u.length+''},
+    {k:'tg_chars',ok:/^[A-Za-z0-9_]+$/.test(u),v:/^[A-Za-z0-9_]+$/.test(u)?'OK':'FAIL'},
+    {k:'tg_letter',ok:/^[A-Za-z]/.test(u),v:/^[A-Za-z]/.test(u)?'OK':'FAIL'},
+    {k:'tg_nodbl',ok:u.indexOf('__')<0&&u.slice(-1)!=='_',v:(u.indexOf('__')<0&&u.slice(-1)!=='_')?'OK':'FAIL'}];
+  if(hasCyr)checks.push({k:'tg_cyr_chk',ok:false,v:t('tg_cyr_fail')});
+  const valid=checks.every(c=>c.ok);
+  const patterns=[];const add=(w,k,lv,vars)=>patterns.push({weight:w,text:fmt(k,vars),lv:lv});
+  if(hasCyr)add(30,'tg_cyr','bad');
+  if(disguised)add(25,'tg_disguised','bad',{c:canon});
+  const BRANDS=['telegram','durov','whatsapp','instagram','facebook','paypal','binance','revolut','admin','support','help','official','wallet','verify','security','login','account','recover','bonus','airdrop','giveaway'];
+  const brandHit=BRANDS.find(b=>canon.indexOf(b)>=0);
+  if(brandHit&&!hasCyr&&!disguised)add(20,'tg_brand','bad',{b:brandHit});
+  if(/(pay|cash|coin|crypto|fund|nft|token|mint|loan|credit)/i.test(canon)&&!brandHit)add(15,'tg_fin','bad');
+  if(/\d{4,}$/.test(u))add(8,'tg_tail','warn');
+  if(u.length<7)add(5,'tg_short','warn');
+  if(/^(the|real|original|true)[_-]/i.test(canon))add(10,'tg_real','warn');
+  if(/^bot.*\d{2,}$/i.test(canon))add(12,'tg_bot','warn');
+  if(!patterns.length)add(0,'tg_clean','ok');
+  const score=Math.max(0,Math.min(100,patterns.reduce((s,p)=>s+p.weight,0)));
+  const verdict=score===0?['v_tg_low','#B4E33D']:score<40?['v_tg_att','#FFB000']:score<70?['v_tg_high','#FF6D3A']:['v_tg_scam','#FF5340'];
+  return{u:u,canon:canon,disguised:disguised,checks:checks,valid:valid,patterns:patterns,score:score,verdict:verdict,link:'https://t.me/'+u};
+}
+
+function luhn(n){let s=0,a=false;for(let i=n.length-1;i>=0;i--){let x=+n[i];if(a){x*=2;if(x>9)x-=9}s+=x;a=!a}return s%10===0}
+function cardBrand(n){
+  if(/^4/.test(n))return'Visa';
+  if(/^(5[1-5]|2(2[2-9]|[3-6]\d|7[01]|720))/.test(n))return'Mastercard';
+  if(/^220[0-4]/.test(n))return'Мир|Mir';
+  if(/^3[47]/.test(n))return'Amex';
+  if(/^62/.test(n))return'UnionPay';
+  if(/^35/.test(n))return'JCB';
+  return null;
+}
+function innCheck(n){
+  const d=n.split('').map(Number);
+  const chk=(a,c)=>{let s=0;for(let i=0;i<c.length;i++)s+=a[i]*c[i];const r=s%11;return r>9?0:r};
+  if(n.length===10)return chk(d,[2,4,10,3,5,9,4,6,8])===d[9];
+  if(n.length===12)return chk(d,[7,2,4,10,3,5,9,4,6,8])===d[10]&&chk(d,[3,7,2,4,10,3,5,9,4,6,8])===d[11];
+  return false;
+}
+function snilsCheck(n){
+  const d=n.split('').map(Number);let s=0;
+  for(let i=0;i<9;i++)s+=d[i]*(9-i);
+  const c=s<100?s:(s===100||s===101?0:s%101);
+  return c===d[9]*10+d[10];
+}
+function detectAndCheck(raw){
+  const n=(raw||'').replace(/[\s-]/g,'').slice(0,32);
+  if(!/^\d+$/.test(n))return{type:'notnum'};
+  if(n.length===15)return{type:'IMEI',name:'IMEI (15)',valid:luhn(n),alg:'Luhn'};
+  if(n.length>=13&&n.length<=19){const b=cardBrand(n);return{type:'CARD',name:(state.lang==='en'?'Card':'Карта')+((b&&b.indexOf('|')>0)?' · '+L(b):(b?' · '+b:'')),valid:luhn(n),alg:'Luhn'}}
+  if(n.length===10||n.length===12)return{type:'INN',name:(state.lang==='en'?'Tax ID (INN)':'ИНН')+' ('+n.length+')',valid:innCheck(n),alg:state.lang==='en'?'FNS official checksum':'формула ФНС'};
+  if(n.length===11)return{type:'SNILS',name:'SNILS (11)',valid:snilsCheck(n),alg:state.lang==='en'?'SF R checksum mod 101':'контр. число mod 101'};
+  return{type:'unknown',name:'('+n.length+')',valid:null};
+}
+
+function detectType(s){
+  s=(s||'').trim().slice(0,512);
+  if(!s)return null;
+  if(/^https?:\/\//i.test(s)||/^www\./i.test(s))return'phish';
+  if(/^@/.test(s)||/^t\.me\//i.test(s))return'tg';
+  const digits=s.replace(/\D/g,'');
+  const numericForm=/^\+?[\d\s()+-]+$/.test(s)&&digits.length>=7&&digits.length<=15;
+  if(numericForm){
+    if(!s.includes('+')){
+      if(digits.length===15)return'checks';
+      if(digits.length>=13&&digits.length<=19)return'checks';
+      if((digits.length===10||digits.length===12)&&!/^[689]/.test(digits))return'checks';
+    }
+    return'phone';
+  }
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s))return'email';
+  if(/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(s)){
+    const tld=s.split('.').pop().split('/')[0];
+    if(/^[a-z]{2,10}$/i.test(tld))return'whois';
+  }
+  return null;
+}
+function updateDetect(switchModule){
+  const v=el('inp').value;
+  const det=el('detector');
+  const m=detectType(v);
+  if(m){
+    if(switchModule)setModule(m,{keep:true,silent:true});
+    det.innerHTML='<i data-lucide="radar"></i><span>'+esc(t('detect_ok'))+' <b>'+esc(mName(m))+'</b>'+(switchModule?'':' — '+esc(t('detect_paste')))+'</span>';
+  }else{
+    det.innerHTML='<i data-lucide="radar"></i><span>'+esc(t('detect_def'))+'</span>';
+  }
+  icons();
+}
+
+let timers=[];
+function print(lines,done){
+  const term=el('term');term.innerHTML='';
+  timers.forEach(clearTimeout);timers=[];
+  lines.forEach((ln,i)=>{
+    const d=document.createElement('div');d.className='tline';
+    if(ln.l!==undefined)d.innerHTML='<span class="tcmd">'+(i===0?'&gt;':'·')+'</span><span class="tlab">'+esc(ln.l)+'</span><span class="tdots"></span><span class="tval '+(ln.c||'')+'">'+esc(ln.v)+'</span>';
+    else d.innerHTML='<span class="tcmd">'+(i===0?'&gt;':'·')+'</span><span class="tval '+(ln.c||'')+'">'+esc(ln.v)+'</span>';
+    term.appendChild(d);
+    timers.push(setTimeout((function(n){return function(){n.classList.add('show')}})(d),i*55));
+  });
+  if(done)timers.push(setTimeout(done,lines.length*55+80));
+}
+function clearPanels(){['verdict','riskPanel','patterns','toolOut','result'].forEach(id=>el(id).classList.remove('show'))}
+function showVerdict(kind,title,sub){
+  const v=el('verdict');
+  const ic=kind==='ok'?'shield-check':kind==='bad'?'octagon-alert':kind==='warn'?'alert-triangle':'info';
+  v.className='verdict show '+kind;
+  v.innerHTML='<div class="v-icon"><i data-lucide="'+ic+'"></i></div><div class="v-txt"><b>'+esc(title)+'</b><span>'+esc(sub)+'</span></div>';
+  icons();
+}
+function showRisk(score,verdict,color){
+  el('riskPanel').classList.add('show');
+  el('riskScore').textContent='score '+score+' / 100';
+  const bar=el('riskBar');bar.innerHTML='';
+  for(let i=0;i<20;i++){const s=document.createElement('i');bar.appendChild(s);
+    if(i<Math.round(score/5))(function(n,k){setTimeout(function(){n.style.background=color;n.style.borderColor=color},k*25)})(s,i)}
+}
+function showPatterns(list){
+  const p=el('patterns');p.classList.add('show');
+  const ic=lv=>lv==='bad'?'alert-triangle':lv==='ok'?'shield-check':'info';
+  p.innerHTML=(list&&list.length?list:[{weight:0,text:t('pt_clean'),lv:'ok'}]).map(pt=>
+    '<div class="pt '+pt.lv+'"><i data-lucide="'+ic(pt.lv)+'"></i><span><b>'+(pt.weight?'+'+pt.weight:'✓')+'</b> '+esc(pt.text)+'</span></div>').join('');
+  icons();
+}
+function showResult(badge,rows,actions){
+  const r=el('result');r.innerHTML='';
+  const grid=document.createElement('div');grid.className='res-grid';
+  const bd=document.createElement('div');bd.className='res-badge';
+  bd.innerHTML='<span class="big">'+esc(badge[0])+'</span><span class="sub">'+esc(badge[1])+'</span>'+(badge[2]?'<span class="tag">'+esc(badge[2])+'</span>':'');
+  grid.appendChild(bd);
+  const right=document.createElement('div');
+  rows.forEach(row=>{
+    const d=document.createElement('div');d.className='res-row';
+    const cls=row[2]===1?'hi':(row[2]==='good'?'good':row[2]==='warn'?'warnv':row[2]==='crit'?'crit':'');
+    d.innerHTML='<span class="k">'+esc(row[0])+'</span><span class="v '+cls+'">'+esc(row[1])+'</span>';
+    right.appendChild(d);
+  });
+  if(actions&&actions.length){
+    const acts=document.createElement('div');acts.className='res-actions';
+    actions.forEach(a=>{
+      const b=document.createElement(a.href?'a':'button');
+      b.className='btn'+(a.primary?' primary':'');
+      b.innerHTML='<i data-lucide="'+(a.icon||'circle')+'"></i>'+esc(a.label);
+      if(a.href){b.href=a.href;b.target='_blank';b.rel='noopener'}
+      if(a.onClick)b.addEventListener('click',a.onClick);
+      acts.appendChild(b);
+    });
+    right.appendChild(acts);
+  }
+  grid.appendChild(right);r.appendChild(grid);r.classList.add('show');icons();
+}
+
+const MODULES={
+  phone:{icon:'phone',prefix:'+',name:'ru:Телефон|en:Phone',ph:'ru:номер — страна и оператор|en:number — country & carrier',
+    title:'ru:module://phone — глубокий разбор + скоринг|en:module://phone — deep analysis + scoring',group:'group_checks',
+    examples:['+7 926 123 45 67','+998 90 123 45 67','+44 70 1234 5678','+1 876 555 0100','+1 900 555 0100','+1 212 555 0100']},
+  tg:{icon:'at-sign',prefix:'@',name:'ru:Telegram|en:Telegram',ph:'ru:@username или ссылка t.me|en:@username or t.me link',
+    title:'ru:module://telegram — омоглифы · leet · скоринг|en:module://telegram — homoglyphs · leet · scoring',group:'group_checks',
+    examples:['@telegram_support','@tеlegram_support','@w4llet_v3r1fy','@durov']},
+  email:{icon:'mail',prefix:'',name:'ru:Email|en:Email',ph:'ru:адрес почты|en:email address',
+    title:'ru:module://email — канонизация · MX · провайдер|en:module://email — canonicalization · MX · provider',group:'group_checks',
+    examples:['t.e.s.t+promo@gmail.com','admin@temp-mail.org','info@wikipedia.org']},
+  checks:{icon:'badge-check',prefix:'',name:'ru:Чек-номера|en:Checksums',ph:'ru:карта / IMEI / ИНН / СНИЛС|en:card / IMEI / INN / SNILS',
+    title:'ru:module://checksums — контрольные суммы|en:module://checksums — checksums',group:'group_checks',
+    examples:['4111 1111 1111 1111','4900774223317907','7707083893','112-233-445 95']},
+  ip:{icon:'globe',prefix:'',name:'ru:Мой IP|en:My IP',ph:'ru:пусто = ваш IP|en:empty = your IP',
+    title:'ru:module://myip — полный разбор только себе|en:module://myip — full data for yourself only',group:'group_checks',examples:['8.8.8.8']},
+  pwned:{icon:'shield-alert',prefix:'',name:'ru:Утечки|en:Leaks',ph:'ru:пароль — не отправляется в сеть|en:password — never sent',
+    title:'ru:module://pwned — HIBP k-anonymity|en:module://pwned — HIBP k-anonymity',group:'group_checks',examples:['password123','qwerty']},
+  whois:{icon:'search',prefix:'',name:'ru:Домен|en:Domain',ph:'ru:example.com|en:example.com',
+    title:'ru:module://domain — DNS и риски|en:module://domain — DNS & risks',group:'group_checks',examples:['google.com']},
+  phish:{icon:'alert-triangle',prefix:'',name:'ru:Фишинг|en:Phishing',ph:'ru:ссылка для проверки|en:link to check',
+    title:'ru:module://phish — анализ ссылки|en:module://phish — link analysis',group:'group_checks',
+    examples:['http://paypa1-verify.tk/login','https://github.com']},
+  crypto:{icon:'bitcoin',prefix:'',name:'ru:Bitcoin|en:Bitcoin',ph:'ru:BTC-адрес|en:BTC address',
+    title:'ru:module://btc — адрес и баланс|en:module://btc — address & balance',group:'group_checks',examples:['1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa']},
+  encode:{icon:'code',prefix:'',name:'ru:Декодер|en:Decoder',ph:'ru:base64 / hex / url / morse|en:base64 / hex / url / morse',
+    title:'ru:module://decode|en:module://decode',group:'group_tools',examples:['SGVsbG8gV29ybGQ=','48656c6c6f','.... . .-.. .-.. ---']},
+  hash:{icon:'lock',prefix:'',name:'ru:SHA|en:SHA',ph:'ru:текст для хеширования|en:text to hash',
+    title:'ru:module://sha|en:module://sha',group:'group_tools',examples:['hello world']},
+  passwd:{icon:'key',prefix:'',name:'ru:Пароли|en:Passwords',ph:'ru:нажмите «Анализ»|en:press Analyze',
+    title:'ru:module://passwd — генератор|en:module://passwd — generator',group:'group_tools',examples:['★']}
+};
+function mName(k){
+  const v=MODULES[k].name.split('|');
+  const pre=state.lang==='en'?'en:':'ru:';
+  for(const p of v)if(p.indexOf(pre)===0)return p.slice(pre.length);
+  return v[0].replace(/^(ru|en):/,'');
+}
+let activeModule='phone';
+/* ADM: объявлено до функций, которые его читают при старте */
+let admOK=false,admFails=0;
+const RUNNERS={phone:r=>runPhone(r),tg:r=>runTg(r),ip:r=>runIp(r),email:r=>runEmail(r),checks:r=>runChecks(r),
+  pwned:r=>runPwned(r),whois:r=>runWhois(r),phish:r=>runPhish(r),crypto:r=>runCrypto(r),encode:r=>runEncode(r),hash:r=>runHash(r),passwd:()=>runPasswd()};
+
+let floodTS=[],floodCount=0,floodUntil=0,floodEvents=0;
+function floodOk(){
+  const now=Date.now();
+  if(now<floodUntil)return false;
+  floodTS=floodTS.filter(ts=>now-ts<60000);
+  if(floodTS.length>=CONFIG.FLOOD_LIMIT){
+    floodCount++;
+    if(floodCount>=2){floodUntil=now+CONFIG.FLOOD_COOLDOWN;floodCount=0;floodEvents++}
+    return false;
+  }
+  floodTS.push(now);return true;
+}
+
+async function run(){
+  try{
+    if(!state.user&&!admOK){toast(t('need_acct'));openAuth();return}
+    if(!admOK&&!canRun()){el('limitOverlay').classList.add('show');return}
+    if(!floodOk()){toast(t('flood'));return}
+    const raw=(el('inp').value||'').trim().slice(0,512);
+    if(!raw&&activeModule!=='ip'&&activeModule!=='passwd'){toast(t('enter_data'));return}
+    bump();
+    logEvent('run',{m:activeModule,adm:admOK});
+    telemetry('run',{m:activeModule});
+    if(raw)pushHistory(activeModule,raw);
+    clearPanels();
+    el('conBox').classList.add('busy');
+    const rect=el('term').getBoundingClientRect();
+    if(window._ping)window._ping(rect.left+rect.width/2,rect.top+40);
+    await RUNNERS[activeModule](raw);
+    el('conBox').classList.remove('busy');
+  }catch(e){
+    el('conBox').classList.remove('busy');
+    print([{v:(e&&e.message?e.message:'error'),c:'bad'}]);
+  }
+}
+
+function runPhone(raw){
+  const p=parsePhone(raw);
+  if(p.error){
+    const msg={empty:t('enter_data'),short:t('ph_short'),long:t('ph_long'),nozone:t('ph_nozone')}[p.error];
+    print([{v:'parse_phone → '+msg,c:'bad'}]);return;
+  }
+  let score=0;
+  if(!p.structOk)score+=55;
+  if(p.special&&p.special.pts)score+=p.special.pts;
+  if(p.anomKey)score+=15;
+  score=Math.min(100,score);
+  const vk=score===0?'v_phone_ok':score<30?'v_phone_sure':score<60?'v_phone_risk':'v_phone_fake';
+  const kind=score===0?'ok':score<30?'warn':'bad';
+  const structTxt=p.structOk?t('struct_ok'):fmt('struct_fail',{n:p.structInfo.len,c:L(p.name),a:p.structInfo.allowed});
+  const lines=[
+    {v:'deep_analyze_phone("'+raw+'")'},
+    {l:t('ph_country'),v:L(p.name)+' ['+p.iso+']',c:'cyan'},
+    {l:t('ph_e164'),v:p.e164,c:'amb'},
+    {l:t('ph_struct'),v:structTxt+(p.structOk?'':' · '+L(p.structInfo.hint)),c:p.structOk?'ok':'bad'},
+    {l:t('ph_course'),v:fmt(p.courseKey,p.courseVar),c:p.special?'orange':(p.courseKey==='course_mobile'?'cyan':'')}];
+  if(p.operator)lines.push({l:t('ph_op'),v:L(p.operator),c:'ok'});
+  if(p.anomKey)lines.push({l:t('ph_anom'),v:t(p.anomKey),c:'orange'});
+  lines.push({l:t('ph_time'),v:p.localTime+(p.night?' '+t('ph_night'):p.tz),c:p.night?'orange':'ok'});
+  if(p.note)lines.push({l:t('ph_note'),v:L(p.note),c:'violet'});
+  lines.push({l:t('ph_score'),v:score+'/100 — '+t(vk),c:score===0?'ok':'bad'});
+  lines.push({l:t('ph_geo'),v:t('ph_notrack'),c:'ok'});
+  print(lines,function(){
+    showVerdict(kind,t(vk),p.structOk?t('vd_phone_ok'):t('vd_phone_fake'));
+    const pats=[];
+    if(!p.structOk)pats.push({weight:0,text:structTxt,lv:'bad'});
+    if(p.special)pats.push({weight:0,text:fmt(p.special.key,{a:p.special.v}),lv:p.special.pts>=40?'bad':'warn'});
+    if(p.anomKey)pats.push({weight:0,text:t(p.anomKey),lv:'warn'});
+    if(p.night&&!pats.some(x=>x.lv==='bad'))pats.push({weight:0,text:fmt('pt_night',{t:p.localTime}),lv:'warn'});
+    if(p.special&&p.special.key==='sp_premium')pats.push({weight:0,text:t('pt_premium_call'),lv:'bad'});
+    if(p.special&&p.special.key==='sp_wangiri')pats.push({weight:0,text:t('pt_wangiri'),lv:'bad'});
+    if(!pats.length)pats.push({weight:0,text:t('pt_phone_ok'),lv:'ok'});
+    showPatterns(pats);
+    showRisk(score,t(vk),score===0?'var(--ok)':score<30?'var(--amber)':'var(--bad)');
+    const rows=[
+      ['E.164',p.e164,1],
+      [t('ph_struct'),structTxt,p.structOk?'good':'crit'],
+      [t('ph_course'),fmt(p.courseKey,p.courseVar),p.special?'warn':undefined]];
+    if(p.operator)rows.push([t('ph_op'),L(p.operator),1]);
+    rows.push([t('ph_time'),p.localTime+(p.night?' 🌙':''),p.night?'warn':'good'],
+      ['UTC',p.tz],[t('ph_geo'),t('ph_notrack')]);
+    showResult([score===0?'OK':score<30?'?':score<60?'RISK':'FAKE',t(vk),score+'/100'],rows,[
+      {label:t('call'),icon:'phone',href:'tel:'+p.e164},
+      {label:'WhatsApp',icon:'message-circle',href:'https://wa.me/'+p.e164.slice(1)},
+      {label:t('copy_report'),icon:'copy',onClick:()=>copyText(p.e164+' — '+L(p.name)+(p.operator?' · '+L(p.operator):'')+' · '+t(vk)+' ('+score+'/100)')}
+    ]);
+  });
+}
+
+function runTg(raw){
+  const g=parseTg(raw);
+  if(g.error){print([{v:'parse_username → '+t('enter_data'),c:'bad'}]);return}
+  const lines=[{v:'deep_analyze_username("'+raw+'")'}];
+  g.checks.forEach(c=>lines.push({l:t(c.k),v:c.v,c:c.ok?'ok':'bad'}));
+  if(g.disguised)lines.push({l:t('tg_norm'),v:g.canon,c:'orange'});
+  lines.push({l:t('tg_valid'),v:g.valid?t('tg_valid_ok'):t('tg_valid_fail'),c:g.valid?'ok':'bad'});
+  lines.push({l:t('tg_score'),v:g.score+'/100 — '+t(g.verdict[0]),c:g.score===0?'ok':'bad'});
+  print(lines,function(){
+    const kind=!g.valid?'bad':(g.score>=40?'bad':(g.score>0?'warn':'ok'));
+    const title=!g.valid?t('vd_tg_fake'):t(g.verdict[0]);
+    const sub=!g.valid?t('vd_tg_fake_s'):(g.score>0?t('vd_tg_warn_s'):t('vd_tg_ok_s'));
+    showVerdict(kind,title,sub);
+    showRisk(g.score,t(g.verdict[0]),g.verdict[1]);
+    showPatterns(g.patterns);
+    showResult(['@'+g.u.slice(0,12),t(g.verdict[0]),g.score+'/100'],
+      [[t('tg_nick'),'@'+g.u,1],
+       [t('tg_norm'),g.canon!==g.u.toLowerCase()?g.canon:'—'],
+       [t('tg_valid'),g.valid?'OK':t('v_ck_fail'),g.valid?'good':'crit']],
+      [{label:t('open_profile'),icon:'external-link',href:g.link,primary:true},
+       {label:t('copy_report'),icon:'copy',onClick:()=>copyText('@'+g.u+' — '+t(g.verdict[0])+' ('+g.score+'/100)')}]);
+  });
+}
+
+function runChecks(raw){
+  const res=detectAndCheck(raw);
+  if(res.type==='notnum'){print([{v:t('ck_only_digits'),c:'bad'}]);return}
+  if(res.type==='unknown'){print([{l:t('ck_type'),v:res.name,c:'amb'},{l:t('ck_alg'),v:t('ck_unknown'),c:'amb'}]);return}
+  print([
+    {v:'checksum_verify("'+raw+'")'},
+    {l:t('ck_type'),v:res.name,c:'cyan'},
+    {l:t('ck_alg'),v:res.alg,c:'cyan'},
+    {l:t('ck_sum'),v:res.valid?t('ck_ok'):t('ck_fail'),c:res.valid?'ok':'bad'}
+  ],function(){
+    showVerdict(res.valid?'ok':'bad',res.valid?t('v_ck_ok'):t('v_ck_fail'),res.valid?t('vd_ck_ok'):t('vd_ck_fail'));
+    showPatterns([{weight:0,text:res.valid?t('pt_ck_ok'):t('pt_ck_fail'),lv:res.valid?'ok':'bad'}]);
+    showRisk(res.valid?5:95,res.valid?t('v_ck_ok'):t('v_ck_fail'),res.valid?'var(--ok)':'var(--bad)');
+    showResult([res.valid?'VALID':'FAKE',res.name,res.alg],
+      [[t('ck_number'),raw,1],[t('ck_type'),res.name],[t('ck_alg'),res.alg],[t('ck_sum'),res.valid?'✓':'✗',res.valid?'good':'crit']],
+      [{label:t('copy_report'),icon:'copy',onClick:()=>copyText(raw+' — '+(res.valid?'checksum OK':'checksum FAIL'))}]);
+  });
+}
+
+async function runEmail(raw){
+  const email=(raw||'').trim().toLowerCase().slice(0,254);
+  const parts=email.split('@');
+  if(parts.length!==2||!parts[0]||!parts[1]){print([{v:t('invalid_email'),c:'bad'}]);return}
+  const local=parts[0],domain=parts[1];
+  const isGmail=domain==='gmail.com'||domain==='googlemail.com';
+  let aliasTxt=null,canonical=local;
+  if(isGmail){
+    const pi=local.indexOf('+');
+    if(pi>0)aliasTxt=t('em_alias_plus');
+    canonical=pi>0?local.slice(0,pi):local;
+    const noDots=canonical.replace(/\./g,'');
+    if(noDots!==canonical)aliasTxt=(aliasTxt?aliasTxt+'. ':'')+fmt('em_alias_dots',{a:noDots+'@gmail.com'});
+    canonical=noDots;
+  }
+  const isRole=/^(info|admin|support|sales|contact|help|billing|noreply|no-reply|office|hello|team|service|security|abuse|postmaster|hr|jobs)/.test(canonical);
+  const disposers=['temp-mail.org','10minutemail.com','guerrillamail.com','mailinator.com','yopmail.com','getnada.com','maildrop.cc','trashmail.com'];
+  const isDisp=disposers.indexOf(domain)>=0;
+  print([{v:'deep_analyze_email("'+email+'")'},
+    {l:t('em_local'),v:local},{l:t('em_domain'),v:domain,c:'amb'},
+    ...(aliasTxt?[{l:t('em_alias'),v:aliasTxt,c:'violet'}]:[]),
+    {l:t('em_role'),v:isRole?t('em_role_r'):t('em_role_p'),c:isRole?'violet':'cyan'},
+    {l:t('em_disp'),v:isDisp?'YES / ДА':'—',c:isDisp?'bad':'ok'},
+    {l:t('em_mx'),v:'dns.google…',c:'cyan'}]);
+  let mx=[];
+  try{const r=await fetch('https://dns.google/resolve?name='+encodeURIComponent(domain)+'&type=MX');const j=await r.json();mx=(j.Answer||[]).map(a=>a.data)}catch(e){}
+  const mxFirst=mx.length?String(mx[0]):'';
+  const provMap=[['google','Google'],['outlook','Microsoft'],['hotmail','Microsoft'],['yandex','Yandex'],['mail.ru','Mail.ru'],['zoho','Zoho'],['proton','Proton'],['icloud','Apple'],['pphosted','Proofpoint'],['mimecast','Mimecast'],['yahoo','Yahoo'],['amazonaws','Amazon']];
+  const prov=provMap.find(p=>mxFirst.indexOf(p[0])>=0);
+  print([
+    {l:t('em_mx'),v:mx.length?mx.length+' '+t('em_found'):t('em_nomx'),c:mx.length?'ok':'bad'},
+    {l:t('em_prov'),v:prov?prov[1]:(mxFirst?mxFirst.slice(0,40):'—'),c:prov?'cyan':''},
+    {l:t('em_dlv'),v:mx.length?t('em_can'):t('em_dead'),c:mx.length?'ok':'bad'}
+  ],function(){
+    const kind=isDisp||!mx.length?'bad':(isRole?'info':'ok');
+    const title=isDisp?t('v_em_disp'):(!mx.length?t('v_em_dead'):(isRole?t('v_em_role'):t('v_em_ok')));
+    const sub=isDisp?t('v_em_disp_s'):(!mx.length?t('v_em_dead_s'):(isRole?t('v_em_role_s'):(aliasTxt||t('em_ok'))));
+    showVerdict(kind,title,sub);
+    const pats=[];
+    if(isDisp)pats.push({weight:0,text:t('pt_em_disp'),lv:'bad'});
+    if(!mx.length)pats.push({weight:0,text:t('pt_em_nomx'),lv:'bad'});
+    if(aliasTxt)pats.push({weight:0,text:aliasTxt+'. '+t('pt_em_alias'),lv:'warn'});
+    if(isRole)pats.push({weight:0,text:t('pt_em_role'),lv:'info'});
+    if(/\d{5,}/.test(canonical))pats.push({weight:0,text:t('em_digits'),lv:'warn'});
+    if(!pats.length)pats.push({weight:0,text:t('em_ok'),lv:'ok'});
+    showPatterns(pats);
+    showResult([domain.split('.')[0].toUpperCase().slice(0,10),isDisp?t('type_disp'):isRole?t('type_role'):t('type_personal'),mx.length?'MX OK':'✗'],
+      [['',email,1],[t('em_canon'),canonical+'@'+(isGmail?'gmail.com':domain),1],
+       [t('em_prov'),prov?prov[1]:(mxFirst?'…':'—')]],
+      [{label:t('copy_report'),icon:'copy',onClick:()=>copyText(email+' — '+title)}]);
+  });
+}
+
+async function runIp(raw){
+  const entered=(raw||'').replace(/\s/g,'').slice(0,64);
+  const isSelf=!entered||['мойip','my','me'].indexOf(entered.toLowerCase())>=0;
+  const looksIp=/^(\d{1,3}\.){3}\d{1,3}$/.test(entered)||entered.indexOf(':')>=0;
+  if(!isSelf&&!looksIp){print([{v:t('ip_notip'),c:'bad'}]);return}
+  print([{v:isSelf?t('ip_q_self'):'query_network_info("'+entered+'")'},{l:t('ip_src'),v:'ipwho.is · HTTPS',c:'cyan'}]);
+  const res=await fetch(isSelf?'https://ipwho.is/':'https://ipwho.is/'+encodeURIComponent(entered));
+  const d=await res.json();
+  if(d.success===false)throw new Error(d.message||'not found');
+  const conn=d.connection||{};
+  const lines=[{l:'IP',v:d.ip,c:'amb'},{l:t('ip_country'),v:(d.country||'—')+' ['+(d.country_code||'')+']',c:'cyan'},
+    {l:t('ip_isp'),v:conn.isp||'—'},{l:t('ip_asn'),v:conn.asn?('AS'+conn.asn):'—'}];
+  if(isSelf)lines.push({l:t('ip_region'),v:d.region||'—',c:'violet'},{l:t('ip_city'),v:d.city||'—',c:'violet'},
+    {l:t('ip_coords'),v:d.latitude+', '+d.longitude,c:'violet'},{l:t('ip_priv'),v:t('ip_priv_self'),c:'ok'});
+  else lines.push({l:t('ip_city'),v:t('ip_hidden'),c:'ok'});
+  print(lines,function(){
+    showVerdict('info',isSelf?t('v_ip_self'):t('v_ip_other'),isSelf?t('v_ip_self_s'):t('v_ip_other_s'));
+    showPatterns([{weight:0,text:isSelf?t('pt_ip_self'):t('pt_ip_other'),lv:isSelf?'info':'ok'}]);
+    const rows=[['IP',d.ip,1],[t('ip_country'),(d.country||'—')+' ['+(d.country_code||'')+']'],[t('ip_isp'),conn.isp||'—'],[t('ip_asn'),conn.asn?('AS'+conn.asn):'—']];
+    if(isSelf)rows.push([t('ip_city'),d.city||'—',1],[t('ip_coords'),d.latitude+', '+d.longitude]);
+    const actions=[{label:t('copy_report'),icon:'copy',onClick:()=>copyText('IP: '+d.ip+' · '+(conn.isp||'—'))}];
+    if(isSelf&&d.latitude)actions.unshift({label:t('on_map'),icon:'map',href:'https://www.openstreetmap.org/?mlat='+d.latitude+'&mlon='+d.longitude+'#map=10/'+d.latitude+'/'+d.longitude,primary:true});
+    showResult([isSelf?'ME':(d.country_code||'IP'),isSelf?t('v_ip_self'):d.ip,'ipwho.is'],rows,actions);
+  });
+}
+
+async function runPwned(raw){
+  const pw=String(raw||'').slice(0,256);
+  if(!(window.crypto&&crypto.subtle)){print([{v:t('crypto_err'),c:'bad'}]);return}
+  if(pw.length<4){print([{v:t('min4'),c:'bad'}]);return}
+  print([{v:'check_pwned("'+'•'.repeat(Math.min(pw.length,10))+'")'},{l:t('pw_method'),v:t('pw_kanon'),c:'cyan'}]);
+  const enc=new TextEncoder();
+  const buf=await crypto.subtle.digest('SHA-256',enc.encode(pw));
+  const hex=Array.from(new Uint8Array(buf)).map(b=>('0'+b.toString(16)).slice(-2)).join('').toUpperCase();
+  const prefix=hex.slice(0,5),suffix=hex.slice(5);
+  const res=await fetch('https://api.pwnedpasswords.com/range/'+prefix);
+  const text=await res.text();
+  let count=0;
+  const rows=text.split('\n');
+  for(let i=0;i<rows.length;i++){const ci=rows[i].indexOf(':');if(ci>0&&rows[i].slice(0,ci)===suffix){count=parseInt(rows[i].slice(ci+1),10)||0;break}}
+  const checks=[[pw.length>=8,t('l8')],[/[a-z]/.test(pw),t('low')],[/[A-Z]/.test(pw),t('up')],[/[0-9]/.test(pw),t('dig')],[/[^a-zA-Z0-9]/.test(pw),t('spec')]];
+  const pct=Math.round(checks.filter(c=>c[0]).length/checks.length*100);
+  print([{l:t('pw_leaks'),v:count>0?count.toLocaleString()+t('pw_times'):t('pw_clean'),c:count>0?'bad':'ok'},
+    {l:t('pw_struct'),v:pct+'%',c:pct>=80?'ok':'amb'},
+    ...checks.map(c=>({l:c[1],v:c[0]?'✓':'✗',c:c[0]?'ok':'bad'}))],function(){
+    const kind=count>0?'bad':(pct>=80?'ok':'warn');
+    showVerdict(kind,count>0?t('v_pw_found'):(pct>=80?t('v_pw_strong'):t('v_pw_weak')),
+      count>0?t('vd_pw_found_s'):(pct>=80?t('vd_pw_strong_s'):t('vd_pw_weak_s')));
+    showRisk(count>0?100:100-pct,count>0?t('v_pw_found'):pct>=80?t('v_pw_strong'):t('v_pw_weak'),count>0?'var(--bad)':pct>=80?'var(--ok)':'var(--amber)');
+    showPatterns([{weight:0,text:count>0?fmt('pt_pw_found',{n:count.toLocaleString()}):(pct>=80?t('pt_pw_strong'):t('pt_pw_weak')),lv:count>0?'bad':(pct>=80?'ok':'warn')}]);
+    showResult([count>0?'LEAK':'SAFE',count>0?count.toLocaleString():pct+'%','HIBP'],
+      [['','•'.repeat(Math.min(pw.length,12))],[t('pw_leaks'),String(count),count>0?'crit':'good'],[t('pw_struct'),pct+'%']]);
+  });
+}
+
+async function runWhois(raw){
+  const domain=(raw||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'').toLowerCase().slice(0,253);
+  if(!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(domain)){print([{v:t('invalid_domain'),c:'bad'}]);return}
+  const tld=domain.split('.').pop();
+  print([{v:'analyze_domain("'+domain+'")'},{l:'DNS',v:'A / MX / NS…',c:'cyan'}]);
+  const out=await Promise.all([
+    fetch('https://dns.google/resolve?name='+domain+'&type=A').then(r=>r.json()).catch(()=>({})),
+    fetch('https://dns.google/resolve?name='+domain+'&type=MX').then(r=>r.json()).catch(()=>({})),
+    fetch('https://dns.google/resolve?name='+domain+'&type=NS').then(r=>r.json()).catch(()=>({}))]);
+  const aRecs=((out[0].Answer||[]).filter(a=>a.type===1)||[]).map(a=>a.data);
+  const mxRecs=(out[1].Answer||[]).map(a=>a.data);
+  const nsRecs=(out[2].Answer||[]).map(a=>a.data);
+  const badTlds=['tk','ml','ga','cf','gq','top','xyz','club','icu','buzz','loan','click'];
+  const tldRisk=badTlds.indexOf(tld)>=0;
+  const dead=!aRecs.length;
+  print([
+    {l:t('dn_a'),v:aRecs.join(', ')||t('dn_none'),c:aRecs.length?'ok':'bad'},
+    {l:t('dn_mx'),v:mxRecs.length?String(mxRecs[0]).slice(0,40):t('dn_none'),c:mxRecs.length?'ok':'violet'},
+    {l:t('dn_ns'),v:nsRecs.length?String(nsRecs[0]).slice(0,40):t('dn_none'),c:nsRecs.length?'ok':'bad'},
+    {l:t('dn_tld'),v:tldRisk?t('dn_bad'):t('dn_good'),c:tldRisk?'bad':'ok'}
+  ],function(){
+    showVerdict(tldRisk||dead?'bad':'ok',dead?t('v_dn_dead'):(tldRisk?t('v_dn_risk'):t('v_dn_ok')),dead?t('v_dn_dead_s'):(tldRisk?t('v_dn_risk_s'):t('v_dn_ok_s')));
+    const pats=[];
+    if(tldRisk)pats.push({weight:0,text:fmt('pt_dn_bad',{t:tld}),lv:'bad'});
+    if(dead)pats.push({weight:0,text:t('pt_dn_dead'),lv:'bad'});
+    if(nsRecs.some(ns=>/cloudflare/i.test(ns)))pats.push({weight:0,text:t('pt_dn_cf'),lv:'info'});
+    if(!dead&&!tldRisk)pats.push({weight:0,text:t('pt_dn_alive'),lv:'ok'});
+    showPatterns(pats);
+    showResult([tld.toUpperCase(),domain,''],
+      [['',domain,1],[t('dn_a'),aRecs.join(', ')||'—'],['TLD','.'+tld+(tldRisk?' ⚠':'')]],
+      [{label:'WHOIS',icon:'external-link',href:'https://who.is/whois/'+domain,primary:true},
+       {label:'Archive',icon:'archive',href:'https://web.archive.org/web/*/'+domain}]);
+  });
+}
+
+function runPhish(raw){
+  let url;
+  try{url=new URL(String(raw).indexOf('http')===0?raw.slice(0,2048):'http://'+String(raw).slice(0,2048))}catch(e){print([{v:t('invalid_link'),c:'bad'}]);return}
+  const host=url.hostname.toLowerCase();
+  const realDomain=host.split('.').slice(-2).join('.');
+  const pats=[];
+  const brands=['google','facebook','amazon','apple','microsoft','paypal','netflix','telegram','whatsapp','instagram','github','binance','revolut'];
+  for(const b of brands){if(host.indexOf(b)>=0&&realDomain!==b+'.com'&&realDomain!==b+'.org')pats.push({weight:0,text:fmt('pt_sq',{b:b,d:realDomain}),lv:'bad'})}
+  if(/[а-яё]/i.test(host))pats.push({weight:0,text:t('pt_cyr_d'),lv:'bad'});
+  const badTlds=['tk','ml','ga','cf','gq','top','xyz','club','icu','buzz'];
+  const tld=host.split('.').pop();
+  if(badTlds.indexOf(tld)>=0)pats.push({weight:0,text:fmt('pt_btld',{t:tld}),lv:'bad'});
+  if(url.protocol.indexOf('https')<0)pats.push({weight:0,text:t('pt_nohttps'),lv:'bad'});
+  if(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host))pats.push({weight:0,text:t('pt_ipdom'),lv:'bad'});
+  if(url.href.indexOf('@')>=0)pats.push({weight:0,text:t('pt_at'),lv:'bad'});
+  if(host.split('.').length>4)pats.push({weight:0,text:t('pt_sub'),lv:'warn'});
+  if(!pats.length)pats.push({weight:0,text:t('pt_phs_ok'),lv:'ok'});
+  const crit=pats.filter(p=>p.lv==='bad').length;
+  const risk=Math.min(100,crit*25);
+  const kind=crit>=2?'bad':(crit===1?'warn':'ok');
+  print([
+    {l:t('phs_proto'),v:url.protocol,c:url.protocol.indexOf('https')>=0?'ok':'bad'},
+    {l:t('phs_domain'),v:host,c:'amb'},{l:t('phs_real'),v:realDomain,c:'cyan'},
+    {l:t('phs_crit'),v:String(crit),c:crit?'bad':'ok'}],function(){
+    showVerdict(kind,crit>=2?t('v_phs_high'):(crit===1?t('v_phs_mid'):t('v_phs_ok')),crit>=2?t('v_phs_high_s'):(crit===1?t('v_phs_mid_s'):t('v_phs_ok_s')));
+    showRisk(risk,crit>=2?t('v_phs_high'):(crit===1?t('v_phs_mid'):t('v_phs_ok')),risk>=50?'var(--bad)':risk>=25?'var(--amber)':'var(--ok)');
+    showPatterns(pats);
+    showResult([tld.toUpperCase(),crit>=2?'PHISHING?':crit===1?'SUSPECT':'SAFE',risk+'/100'],
+      [[t('phs_domain'),host,1],[t('phs_proto'),url.protocol]],
+      [{label:'VirusTotal',icon:'shield',href:'https://www.virustotal.com/gui/home/search'}]);
+  });
+}
+
+async function runCrypto(raw){
+  const addr=(raw||'').trim().slice(0,100);
+  let type=null;
+  if(/^1[a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(addr))type='Legacy (P2PKH)';
+  else if(/^3[a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(addr))type='P2SH (SegWit)';
+  else if(/^bc1[a-z0-9]{11,71}$/i.test(addr))type='Bech32 (SegWit)';
+  if(!type){print([{v:t('notbtc'),c:'bad'}]);return}
+  print([{v:'validate_btc(…)'},{l:t('btc_fmt'),v:'OK · '+type,c:'ok'},{l:t('btc_chain'),v:'mempool.space…',c:'amb'}]);
+  let stats=null;
+  try{
+    const r=await fetch('https://mempool.space/api/address/'+encodeURIComponent(addr));
+    const d=await r.json();const cs=d.chain_stats||{};
+    stats={bal:((cs.funded_txo_sum||0)-(cs.spent_txo_sum||0))/1e8,funded:(cs.funded_txo_sum||0)/1e8,tx:cs.tx_count||0};
+  }catch(e){}
+  if(stats){
+    print([{l:t('btc_bal'),v:stats.bal.toFixed(8)+' BTC',c:'amb'},{l:t('btc_got'),v:stats.funded.toFixed(8)+' BTC'},{l:t('btc_tx'),v:String(stats.tx)}],function(){
+      showVerdict('info',t('v_btc')+' · '+type.split(' ')[0],stats.bal.toFixed(8)+' BTC · '+stats.tx+' tx');
+      showResult(['BTC',type.split(' ')[0],'mempool.space'],
+        [['',addr,1],[t('btc_bal'),stats.bal.toFixed(8)+' BTC',stats.bal>0?1:0],[t('btc_tx'),String(stats.tx)]],
+        [{label:'Explorer',icon:'external-link',href:'https://mempool.space/address/'+addr,primary:true}]);
+    });
+  }else{
+    print([{l:'API',v:t('btc_api')+': '+type,c:'ok'}],function(){
+      showVerdict('info',t('v_btc'),type);
+      showResult(['BTC',type,'format OK'],[['',addr,1],[t('btc_fmt'),type]]);
+    });
+  }
+}
+
+function runEncode(raw){
+  const input=(raw||'').trim().slice(0,2048);if(!input){print([{v:t('enter_data'),c:'bad'}]);return}
+  const results=[];
+  try{const d=atob(input);if(d&&/^[\x20-\x7E\n\r\t]*$/.test(d))results.push({format:'Base64',result:d})}catch(e){}
+  const clean=input.replace(/\s/g,'');
+  if(/^[0-9a-fA-F]+$/.test(clean)&&clean.length>=4&&clean.length%2===0){
+    try{const bytes=[];for(let i=0;i<clean.length;i+=2)bytes.push(parseInt(clean.substr(i,2),16));
+    const txt=bytes.filter(b=>b>=32&&b<127).map(b=>String.fromCharCode(b)).join('');
+    if(txt)results.push({format:'Hex',result:txt})}catch(e){}
+  }
+  try{const d=decodeURIComponent(input);if(d!==input)results.push({format:'URL',result:d})}catch(e){}
+  if(/^[.\-\/\s]+$/.test(input)){
+    const m={'.-':'A','-...':'B','-.-.':'C','-..':'D','.':'E','..-.':'F','--.':'G','....':'H','..':'I','.---':'J','-.-':'K','.-..':'L','--':'M','-.':'N','---':'O','.--.':'P','--.-':'Q','.-.':'R','...':'S','-':'T','..-':'U','...-':'V','.--':'W','-..-':'X','-.--':'Y','--..':'Z'};
+    const d=input.split(/\s*\/\s*|\s{3,}/).map(w=>w.trim().split(/\s+/).map(c=>m[c]||'').join('')).join(' ').trim();
+    if(d)results.push({format:'Morse',result:d});
+  }
+  const rot13=input.replace(/[a-z]/gi,c=>{const b=c<='Z'?65:97;return String.fromCharCode((c.charCodeAt(0)-b+13)%26+b)});
+  if(rot13!==input&&/[a-z]/i.test(input))results.push({format:'ROT13',result:rot13});
+  if(!results.length){print([{v:t('enc_none'),c:'bad'}]);return}
+  print(results.map(r=>({l:r.format,v:String(r.result).slice(0,60),c:'ok'})),function(){
+    showVerdict('info',fmt('enc_n',{n:results.length}),results.map(r=>r.format).join(' · '));
+    showResult([results[0].format.slice(0,6).toUpperCase(),results.length+'',''],
+      results.map((r,i)=>[r.format,String(r.result).slice(0,80),i===0?1:0]),
+      [{label:t('copy_report'),icon:'copy',primary:true,onClick:()=>copyText(String(results[0].result))}]);
+  });
+}
+
+async function runHash(raw){
+  const text=String(raw||'').slice(0,4096);if(!text){print([{v:t('enter_data'),c:'bad'}]);return}
+  if(!(window.crypto&&crypto.subtle)){print([{v:t('crypto_err'),c:'bad'}]);return}
+  const enc=new TextEncoder();
+  const toHex=async alg=>Array.from(new Uint8Array(await crypto.subtle.digest(alg,enc.encode(text)))).map(b=>('0'+b.toString(16)).slice(-2)).join('');
+  const h256=await toHex('SHA-256'),h1=await toHex('SHA-1'),h512=await toHex('SHA-512');
+  print([{l:'SHA-256',v:h256.slice(0,32)+'…',c:'amb'},{l:'SHA-1',v:h1.slice(0,24)+'…'},{l:'SHA-512',v:h512.slice(0,24)+'…',c:'violet'}],function(){
+    showVerdict('info','SHA',t('sha_n')+' · Web Crypto');
+    showResult(['SHA',t('sha_n'),'Web Crypto'],[['SHA-256',h256,1],['SHA-1',h1],['SHA-512',h512]],
+      [{label:'SHA-256',icon:'copy',primary:true,onClick:()=>copyText(h256)},
+       {label:'SHA-512',icon:'copy',onClick:()=>copyText(h512)}]);
+  });
+}
+
+function runPasswd(){
+  const out=el('toolOut');out.classList.add('show');
+  out.innerHTML=
+    '<div class="field"><label>'+esc(t('pw_len'))+': <span id="pwLenVal" style="color:var(--amber)">24</span></label>'+
+    '<input type="range" min="8" max="64" value="24" id="pwLen"></div>'+
+    '<div class="field"><label>'+esc(t('pw_sets'))+'</label><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;font-family:var(--mono)">'+
+    '<label><input type="checkbox" id="pwU" checked> A-Z</label><label><input type="checkbox" id="pwL" checked> a-z</label>'+
+    '<label><input type="checkbox" id="pwD" checked> 0-9</label><label><input type="checkbox" id="pwS" checked> !@#$%</label></div></div>'+
+    '<div class="field"><label>'+esc(t('pw_res'))+'</label><textarea id="pwResult" rows="3" readonly style="color:var(--amber)"></textarea></div>'+
+    '<div style="display:flex;gap:6px"><button class="btn primary" id="pwGen"><i data-lucide="refresh-cw"></i>'+esc(t('pw_gen'))+'</button>'+
+    '<button class="btn" id="pwCopy"><i data-lucide="copy"></i>'+esc(t('copy_report'))+'</button></div>';
+  icons();
+  el('pwLen').addEventListener('input',function(){el('pwLenVal').textContent=this.value});
+  el('pwGen').addEventListener('click',genPw);
+  el('pwCopy').addEventListener('click',()=>copyText(el('pwResult').value));
+  genPw();
+  print([{v:t('pw_gen_ready'),c:'cyan'}]);
+}
+function genPw(){
+  const len=parseInt(el('pwLen').value,10)||24;let chars='';
+  if(el('pwU').checked)chars+='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if(el('pwL').checked)chars+='abcdefghijklmnopqrstuvwxyz';
+  if(el('pwD').checked)chars+='0123456789';
+  if(el('pwS').checked)chars+='!@#$%^&*()_+-=';
+  if(!chars)chars='abcdefghijklmnopqrstuvwxyz';
+  const arr=new Uint32Array(len);crypto.getRandomValues(arr);
+  el('pwResult').value=Array.from(arr).map(n=>chars.charAt(n%chars.length)).join('');
+}
+
+/* ============================================================
+   КРИПТО-БИЛЛИНГ ПАКОВ
+   ============================================================ */
+let payTimer=null,payNet=null,curOrder=null,priceCache={ts:0,data:null};
+
+async function getPrices(){
+  const now=Date.now();
+  if(priceCache.data&&now-priceCache.ts<5*60000)return priceCache.data;
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,the-open-network,solana,tether&vs_currencies=usd');
+    const j=await r.json();
+    const d={bitcoin:j.bitcoin&&j.bitcoin.usd,ethereum:j.ethereum&&j.ethereum.usd,'the-open-network':j['the-open-network']&&j['the-open-network'].usd,solana:j.solana&&j.solana.usd,tether:(j.tether&&j.tether.usd)||1};
+    if(d.bitcoin&&d.ethereum&&d['the-open-network']&&d.solana){priceCache={ts:now,data:d};return d}
+    return CONFIG.FALLBACK_PRICES;
+  }catch(e){return CONFIG.FALLBACK_PRICES}
+}
+function ceilTo(x,dec){const m=Math.pow(10,dec);return Math.ceil(x*m-1e-9)/m}
+function orderCode(){
+  const abc='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const a=new Uint8Array(6);crypto.getRandomValues(a);
+  return 'OI-'+Array.from(a).map(n=>abc[n%abc.length]).join('');
+}
+
+const NETS=[
+  {id:'btc',icon:'bitcoin',key:'net_btc',addr:()=>CONFIG.BTC_ADDRESS,needMemo:false,
+   amount:usd=>ceilTo(usd/prices.bitcoin,8),fmt:a=>a.toFixed(8)+' BTC',
+   need:usd=>String(Math.round(ceilTo(usd/prices.bitcoin,8)*1e8))},
+  {id:'eth',icon:'gem',key:'net_eth',addr:()=>CONFIG.ETH_ADDRESS,needMemo:false,
+   amount:usd=>ceilTo(usd/prices.ethereum,6),fmt:a=>a.toFixed(6)+' ETH',
+   need:usd=>(BigInt(Math.round(ceilTo(usd/prices.ethereum,6)*1e6))*1000000000000n).toString()},
+  {id:'ton',icon:'send',key:'net_ton',addr:()=>CONFIG.TON_ADDRESS,needMemo:true,
+   amount:usd=>ceilTo(usd/prices['the-open-network'],2),fmt:a=>a.toFixed(2)+' TON',
+   need:usd=>String(Math.round(ceilTo(usd/prices['the-open-network'],2)*1e9))},
+  {id:'usdt_ton',icon:'circle-dollar-sign',key:'net_usdt',addr:()=>CONFIG.TON_ADDRESS,needMemo:true,
+   amount:usd=>ceilTo(usd/prices.tether,2),fmt:a=>a.toFixed(2)+' USDT',
+   need:usd=>String(Math.round(ceilTo(usd/prices.tether,2)*1e6))},
+  {id:'sol',icon:'activity',key:'net_sol',addr:()=>CONFIG.SOL_ADDRESS,needMemo:false,
+   amount:usd=>ceilTo(usd/prices.solana,3),fmt:a=>a.toFixed(3)+' SOL',
+   need:usd=>String(Math.round(ceilTo(usd/prices.solana,3)*1e9))}
+];
+let prices=null;
+
+function openPay(planKey){
+  const pk=PACKS[planKey];if(!pk)return;
+  if(!state.user){toast(t('need_acct'));openAuth();return}
+  el('payTitle').textContent=t('pay_title')+planKey.toUpperCase()+' · $'+pk.usd;
+  el('payDesc').textContent=t('pay_howto');
+  el('payModal').classList.add('show');
+  const netRow=el('netRow');netRow.innerHTML='';
+  el('payBody').innerHTML='<div class="pay-timer"><i data-lucide="loader" class="spin"></i> '+esc(t('pay_price_load'))+'</div>';
+  icons();
+  getPrices().then(pr=>{
+    if(pr===CONFIG.FALLBACK_PRICES)toast(t('pay_price_err'));
+    prices=pr;
+    curOrder={plan:planKey,usd:pk.usd,code:orderCode()};
+    NETS.forEach((n,i)=>{
+      const b=document.createElement('button');b.className='net-btn'+(i===0?' sel':'');
+      b.innerHTML='<i data-lucide="'+n.icon+'"></i>'+esc(t(n.key));
+      b.addEventListener('click',function(){
+        netRow.querySelectorAll('.net-btn').forEach(x=>x.classList.remove('sel'));
+        b.classList.add('sel');payNet=n.id;renderPayBody();
+      });
+      netRow.appendChild(b);
+    });
+    payNet=NETS[0].id;icons();renderPayBody();
+  });
+}
+function netDef(){return NETS.find(n=>n.id===payNet)}
+function renderPayBody(){
+  clearInterval(payTimer);
+  const body=el('payBody');
+  const n=netDef();if(!n||!curOrder)return;
+  const addr=n.addr();
+  const amount=n.amount(curOrder.usd);
+  curOrder.amountStr=n.fmt(amount);
+  curOrder.need=n.need(curOrder.usd);
+  if(!addr){
+    body.innerHTML='<div class="pay-addr" style="color:var(--orange)">⚠ '+esc(state.lang==='en'?'Receiving address not configured (CONFIG).':'Адрес для приёма не настроен (CONFIG).')+'</div>'+
+      '<button class="btn primary" id="payDemo"><i data-lucide="flask-conical"></i>'+esc(t('pay_demo'))+'</button>';
+    icons();
+    el('payDemo').addEventListener('click',function(){activatePlan(curOrder.plan,'demo','demo-'+Date.now())});
+    return;
+  }
+  body.innerHTML=
+    '<label>'+esc(t('pay_addr'))+'</label>'+
+    '<div class="pay-addr">'+esc(addr)+' <button class="btn" id="payCopyAddr" style="margin-left:8px;padding:4px 8px"><i data-lucide="copy"></i></button></div>'+
+    '<div class="pay-amount"><span>'+esc(t('pay_amount'))+' ($'+curOrder.usd+')</span><b>'+esc(curOrder.amountStr)+'</b></div>'+
+    (n.needMemo
+      ?'<div class="pay-memo"><label>'+esc(t('pay_memo'))+'</label><div class="code">'+esc(curOrder.code)+' <button class="btn" id="payCopyMemo" style="padding:3px 8px;margin-left:8px"><i data-lucide="copy"></i></button></div><div class="warn">'+esc(t('pay_memo_warn'))+'</div></div>'
+      :'')+
+    '<div class="pay-timer"></div>'+
+    '<label>'+esc(n.needMemo?t('pay_txid_opt'):t('pay_txid'))+'</label>'+
+    '<input type="text" id="payTxid" maxlength="128" placeholder="txid / hash">'+
+    '<div class="err-msg" id="payErr"></div>'+
+    '<button class="btn primary" id="payVerify"><i data-lucide="shield-check"></i>'+esc(t('pay_verify'))+'</button>';
+  icons();
+  el('payCopyAddr').addEventListener('click',()=>copyText(addr));
+  if(el('payCopyMemo'))el('payCopyMemo').addEventListener('click',()=>copyText(curOrder.code));
+  let left=CONFIG.WINDOW_MIN*60;
+  const tEl=body.querySelector('.pay-timer');
+  const tick=()=>{const m=Math.floor(left/60),s=left%60;tEl.textContent=t('pay_window')+': '+m+':'+('0'+s).slice(-2);if(left>0)left--;else clearInterval(payTimer)};
+  tick();payTimer=setInterval(tick,1000);
+  el('payVerify').addEventListener('click',async function(){
+    const txid=(el('payTxid').value||'').trim().slice(0,128);
+    const err=el('payErr');
+    if(!n.needMemo&&!txid){err.textContent=t('enter_data');err.style.display='block';return}
+    if(txid&&state.usedTx&&state.usedTx.indexOf(txid)>=0){err.textContent=t('pay_used');err.style.display='block';return}
+    const btn=el('payVerify');btn.disabled=true;btn.innerHTML='<i data-lucide="loader" class="spin"></i>'+esc(t('pay_verifying'));
+    try{
+      let v;
+      if(payNet==='btc')v=await verifyBTC(txid,BigInt(curOrder.need));
+      else if(payNet==='eth')v=await verifyETH(txid,curOrder.need);
+      else if(payNet==='ton')v=await verifyTON(curOrder.code,BigInt(curOrder.need));
+      else if(payNet==='usdt_ton')v=await verifyUSDT_TON(curOrder.code,BigInt(curOrder.need));
+      else if(payNet==='sol')v=await verifySOL(txid,BigInt(curOrder.need));
+      if(v.ok){activatePlan(curOrder.plan,payNet,txid||('code:'+curOrder.code))}
+      else{
+        const msg=v.err==='tx_not_found'?t('pay_nf'):v.err==='wrong_amount'?t('pay_wrong_amt'):v.err==='wrong_dest'?t('pay_wrong_dst'):v.err==='pending'?t('pay_conf_pending'):t('pay_nf');
+        err.textContent=msg;
+        err.style.display='block';
+      }
+    }catch(e){err.textContent='API: '+e.message;err.style.display='block'}
+    btn.disabled=false;btn.innerHTML='<i data-lucide="shield-check"></i>'+esc(t('pay_verify'));icons();
+  });
+}
+
+async function verifyBTC(txid,needSat){
+  const r=await fetch('https://mempool.space/api/tx/'+encodeURIComponent(txid));
+  if(!r.ok)return{ok:false,err:'tx_not_found'};
+  const tx=await r.json();
+  let sat=0;
+  (tx.vout||[]).forEach(v=>{if(v.scriptpubkey_address&&v.scriptpubkey_address.toLowerCase()===CONFIG.BTC_ADDRESS.toLowerCase())sat+=v.value||0});
+  const confirmed=!!(tx.status&&tx.status.confirmed);
+  if(sat>0&&!confirmed)return{ok:false,err:'pending',paid:sat};
+  return{ok:sat>=needSat,err:sat>0?'wrong_amount':'wrong_dest',paid:sat,confirmed:confirmed};
+}
+async function verifyETH(txid,needWeiStr){
+  const low=CONFIG.ETH_ADDRESS.toLowerCase();
+  try{
+    const r=await fetch('https://eth.blockscout.com/api/v2/transactions/'+encodeURIComponent(txid));
+    if(r.ok){
+      const d=await r.json();
+      if(!d||!d.to||!d.to.hash)return{ok:false,err:'tx_not_found'};
+      if(String(d.to.hash).toLowerCase()!==low)return{ok:false,err:'wrong_dest'};
+      const val=BigInt(d.value||'0');
+      const ok=val>=BigInt(needWeiStr);
+      return{ok:ok,err:ok?'':'wrong_amount',paid:val,confirmed:true};
+    }
+  }catch(e){}
+  const r2=await fetch('https://api.blockchair.com/ethereum/dashboards/transaction/'+encodeURIComponent(txid));
+  if(!r2.ok)return{ok:false,err:'tx_not_found'};
+  const j2=await r2.json();
+  const tx=j2&&j2.data&&j2.data[txid]&&j2.data[txid].transaction;
+  if(!tx)return{ok:false,err:'tx_not_found'};
+  if(String(tx.to||'').toLowerCase()!==low)return{ok:false,err:'wrong_dest'};
+  const val=BigInt(tx.value||'0');
+  const confirmed=tx.block_id!==-1&&tx.block_id!==null;
+  if(val>=BigInt(needWeiStr)&&!confirmed)return{ok:false,err:'pending',paid:val};
+  return{ok:val>=BigInt(needWeiStr)&&confirmed,err:val>0?'wrong_amount':'wrong_dest',paid:val,confirmed:confirmed};
+}
+async function verifyTON(code,needNano){
+  const key=CONFIG.TONCENTER_API_KEY?('&api_key='+encodeURIComponent(CONFIG.TONCENTER_API_KEY)):'';
+  const r=await fetch('https://toncenter.com/api/v2/getTransactions?address='+encodeURIComponent(CONFIG.TON_ADDRESS)+'&limit=50'+key);
+  if(!r.ok)return{ok:false,err:'tx_not_found'};
+  const j=await r.json();
+  const list=(j&&j.result)||[];
+  for(const tx of list){
+    const m=tx&&tx.in_msg;
+    if(!m)continue;
+    if(String(m.message||'').toUpperCase().indexOf(code)>=0){
+      const val=BigInt(m.value||'0');
+      return{ok:val>=needNano,err:val>0?'wrong_amount':'wrong_dest',paid:val,confirmed:true};
+    }
+  }
+  return{ok:false,err:'tx_not_found'};
+}
+async function verifyUSDT_TON(code,needUnits){
+  const key=CONFIG.TONCENTER_API_KEY?('&api_key='+encodeURIComponent(CONFIG.TONCENTER_API_KEY)):'';
+  const r=await fetch('https://toncenter.com/api/v3/jetton_transfers?owner='+encodeURIComponent(CONFIG.TON_ADDRESS)+'&limit=50'+key);
+  if(!r.ok)return{ok:false,err:'tx_not_found'};
+  const j=await r.json();
+  const list=(j&&j.jetton_transfers)||[];
+  for(const tr of list){
+    if(String(tr.jetton_address||'')!==CONFIG.USDT_TON_JETTON)continue;
+    if(String(tr.comment||'').toUpperCase().indexOf(code)>=0){
+      const val=BigInt(tr.amount||'0');
+      return{ok:val>=needUnits,err:val>0?'wrong_amount':'wrong_dest',paid:val,confirmed:true};
+    }
+  }
+  return{ok:false,err:'tx_not_found'};
+}
+async function verifySOL(sig,needLam){
+  const r=await fetch('https://api.mainnet-beta.solana.com',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getTransaction',params:[sig,{encoding:'jsonParsed',maxSupportedTransactionVersion:0}]})});
+  if(!r.ok)return{ok:false,err:'tx_not_found'};
+  const j=await r.json();
+  const res=j&&j.result;
+  if(!res)return{ok:false,err:'tx_not_found'};
+  if(res.meta&&res.meta.err)return{ok:false,err:'tx_not_found'};
+  const keys=(res.transaction&&res.transaction.message&&res.transaction.message.accountKeys)||[];
+  const idx=keys.findIndex(k=>k.pubkey===CONFIG.SOL_ADDRESS);
+  if(idx<0)return{ok:false,err:'wrong_dest'};
+  const delta=(res.meta.postBalances[idx]||0)-(res.meta.preBalances[idx]||0);
+  return{ok:delta>=needLam,err:delta>0?'wrong_amount':'wrong_dest',paid:delta,confirmed:true};
+}
+
+function activatePlan(plan,net,txid){
+  state.pack={plan:plan,net:net,txid:txid,usd:curOrder?curOrder.usd:null,need:curOrder?curOrder.need:null,code:curOrder?curOrder.code:null,ts:Date.now()};
+  state.usedTx=(state.usedTx||[]).concat(txid).slice(-50);
+  save();
+  logEvent('purchase',{plan:plan,net:net,usd:curOrder?curOrder.usd:0,tx:txid.slice(0,24)});
+  telemetry('purchase',{plan:plan,usd:curOrder?curOrder.usd:0});
+  closeModal('payModal');clearInterval(payTimer);
+  updateCounter();toast(t('pay_success')+' → '+plan.toUpperCase());
+  renderPricing();
+}
+
+let _payChecked=false;
+async function validateStoredPayment(){
+  if(_payChecked)return;_payChecked=true;
+  if(admOK)return;
+  const pk=currentPack();
+  if(!pk)return;
+  const p=state.pack;
+  const downgrade=()=>{state.pack=null;save();updateCounter();renderPricing();toast(t('downgrade'))};
+  if(!p||p.net==='demo'||!p.need){downgrade();return}
+  try{
+    getPrices().then(async pr=>{
+      prices=pr;
+      let v;
+      if(p.net==='btc')v=await verifyBTC(p.txid,BigInt(p.need));
+      else if(p.net==='eth')v=await verifyETH(p.txid,p.need);
+      else if(p.net==='ton')v=await verifyTON(p.code,BigInt(p.need));
+      else if(p.net==='usdt_ton')v=await verifyUSDT_TON(p.code,BigInt(p.need));
+      else if(p.net==='sol')v=await verifySOL(p.txid,BigInt(p.need));
+      else{downgrade();return}
+      if(v.ok)return;
+      downgrade();
+    });
+  }catch(e){}
+}
+
+/* ===== АДМИН-ПАНЕЛЬ (F8) ===== */
+async function adminHash(s){
+  if(!(window.crypto&&crypto.subtle))return null;
+  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('oi-admin:'+s));
+  return Array.from(new Uint8Array(b)).map(x=>('0'+x.toString(16)).slice(-2)).join('');
+}
+async function adminLogin(){
+  const code=(el('admCode').value||'').trim();
+  const err=el('admErr');
+  if(admFails>=5){err.textContent='Locked 60s';err.classList.add('show');return}
+  const hc=await adminHash(code+CONFIG.ADMIN_KEY);
+  const hr=await adminHash(CONFIG.ADMIN_CODE+CONFIG.ADMIN_KEY);
+  if(hc&&hr&&hc===hr){
+    admOK=true;admFails=0;
+    el('admLogin').style.display='none';
+    el('admDash').style.display='block';
+    el('admCode').value='';
+    err.classList.remove('show');
+    renderAdmin();
+    setAdminMode(true);
+  }else{
+    admFails++;
+    err.textContent=t('adm_bad')+(admFails>=5?' · Locked 60s':'');
+    err.classList.add('show');
+    if(admFails>=5)setTimeout(()=>{admFails=0;err.classList.remove('show')},60000);
+  }
+}
+function setAdminMode(on){
+  document.body.classList.toggle('adm',on);
+  updateCounter();
+  toast(on?t('adm_on'):t('adm_off'));
+}
+function renderAdmin(){
+  const users=getUsers();
+  const nUsers=Object.keys(users).length;
+  const runs=(state.runs||[]);
+  const events=(state.events||[]);
+  const td=today();
+  const todayRuns=runs.filter(r=>new Date(r.t).toISOString().slice(0,10)===td).length;
+  const todayVisits=events.filter(e=>e.type==='visit'&&new Date(e.t).toISOString().slice(0,10)===td).length;
+  const purchases=events.filter(e=>e.type==='purchase');
+  const totalRev=purchases.reduce((s,e)=>s+(e.data.usd||0),0);
+  const modCnt={};
+  runs.forEach(r=>{modCnt[r.m]=(modCnt[r.m]||0)+1});
+  const topMods=Object.entries(modCnt).sort((a,b)=>b[1]-a[1]).slice(0,4)
+    .map(pair=>mName(pair[0])+'×'+pair[1]).join(' · ')||'—';
+  el('admStats').innerHTML=
+    '<div class="a-stat"><b>'+nUsers+'</b><span>'+esc(t('adm_stat_users'))+'</span></div>'+
+    '<div class="a-stat"><b>'+((state.meta&&state.meta.myVisitNo)||'—')+'</b><span>'+esc(t('adm_stat_visits'))+'</span></div>'+
+    '<div class="a-stat"><b>'+todayVisits+'</b><span>'+esc(t('adm_stat_todayvisits'))+'</span></div>'+
+    '<div class="a-stat"><b>$'+totalRev+'</b><span>'+esc(t('adm_stat_rev'))+'</span></div>'+
+    '<div class="a-stat"><b>'+runs.length+'</b><span>'+esc(t('adm_stat_runs'))+'</span></div>'+
+    '<div class="a-stat"><b>'+todayRuns+'</b><span>'+esc(t('adm_stat_todayruns'))+'</span></div>'+
+    '<div class="a-stat" style="grid-column:1/-1"><b style="font-size:13px">'+esc(topMods)+'</b><span>'+esc(t('adm_stat_topmods'))+'</span></div>';
+  const rows=events.slice(-10).reverse().map(e=>{
+    const d=new Date(e.t);
+    const time=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+' '+('0'+(d.getMonth()+1)).slice(-2)+'/'+('0'+d.getDate()).slice(-2);
+    let detail='';
+    if(e.type==='purchase')detail=e.data.plan+' · $'+e.data.usd;
+    else if(e.type==='run')detail=String(e.data.m||'')+(e.data.adm?' ·ADM':'');
+    else if(e.type==='visit')detail='#'+e.data.n;
+    const lbl=t('ev_'+e.type)!=='ev_'+e.type?t('ev_'+e.type):e.type;
+    return '<div class="a-row"><span class="lbl">'+time+' · '+esc(lbl)+'</span><span class="val">'+esc(detail)+'</span></div>';
+  }).join('');
+  el('admRows').innerHTML='<div class="klabel" style="margin-bottom:8px">'+esc(t('adm_evlog'))+'</div>'+(rows||'<div class="a-row"><span class="lbl">—</span></div>');
+  icons();
+}
+function toggleAdmin(){
+  const p=el('adminPanel');
+  if(p.classList.contains('show')){p.classList.remove('show');return}
+  p.classList.add('show');
+  admOK=false;
+  document.body.classList.remove('adm');
+  el('admLogin').style.display='block';
+  el('admDash').style.display='none';
+  el('admCode').value='';
+  el('admErr').classList.remove('show');
+  setTimeout(()=>el('admCode').focus(),50);
+}
+el('admEnter').addEventListener('click',adminLogin);
+el('admCode').addEventListener('keydown',e=>{if(e.key==='Enter')adminLogin()});
+el('admLogout').addEventListener('click',()=>{admOK=false;setAdminMode(false);el('adminPanel').classList.remove('show')});
+el('admExport').addEventListener('click',function(){
+  const blob=new Blob([JSON.stringify({users:getUsers(),state:state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='openintel-backup-'+today()+'.json';
+  a.click();
+});
+el('admChg').addEventListener('click',function(){
+  const np=prompt(t('adm_chgpwd_q'));
+  if(np&&np.length>=8){CONFIG.ADMIN_CODE=np;toast(t('adm_pwd_ok')+' (runtime)')}
+  else if(np)toast('8+ chars');
+});
+el('admWipe').addEventListener('click',function(){
+  if(!confirm(t('adm_wipe_q1')))return;
+  const k=prompt(t('adm_wipe_q2'));
+  if(k&&k===CONFIG.ADMIN_KEY){
+    localStorage.removeItem(LS);
+    localStorage.removeItem('oi_users');
+    location.reload();
+  }else if(k){toast(t('adm_bad'))}
+});
+
+/* ===== UI RENDERS ===== */
+function renderToolbar(){
+  const tb=el('toolbar');tb.innerHTML='';
+  let lastGroup=null;
+  Object.keys(MODULES).forEach(function(key){
+    const m=MODULES[key];
+    if(m.group!==lastGroup){
+      if(lastGroup!==null){const sep=document.createElement('span');sep.className='tb-sep';tb.appendChild(sep)}
+      const g=document.createElement('span');g.className='tb-group';g.textContent=t(m.group);tb.appendChild(g);
+      lastGroup=m.group;
+    }
+    const b=document.createElement('button');
+    b.className='toolbtn'+(key===activeModule?' active':'');
+    b.innerHTML='<i data-lucide="'+m.icon+'"></i>'+esc(mName(key));
+    b.addEventListener('click',function(){setModule(key)});
+    tb.appendChild(b);
+  });
+  icons();
+}
+function setModule(key,opts){
+  opts=opts||{};
+  activeModule=key;const m=MODULES[key];
+  el('conTitle').textContent=L(m.title);
+  el('prefix').textContent=m.prefix;
+  const inp=el('inp');
+  inp.placeholder=L(m.ph);
+  if(!opts.keep){
+    inp.value='';clearPanels();updateDetect(false);
+    el('term').innerHTML='<div class="tplaceholder">//<span class="caret"></span></div>';
+  }
+  if(!opts.silent){
+    el('chipsBox').innerHTML='';
+    m.examples.forEach(function(ex){
+      const c=document.createElement('button');c.className='chip';c.textContent=ex;
+      c.addEventListener('click',function(){setModule(key,{keep:true});inp.value=ex;run()});
+      el('chipsBox').appendChild(c);
+    });
+  }
+  renderToolbar();
+  if(!opts.silent)inp.focus();
+}
+function renderMods(){
+  const info=[
+    ['phone','ru:Телефон · глубоко|en:Phone · deep','ru:подлинность структуры, премиум/Wangiri, время у абонента, скоринг|en:structure validity, premium/Wangiri, local time, scoring'],
+    ['tg','ru:Telegram · глубоко|en:Telegram · deep','ru:омоглифы, leet-декод, скоринг скам-маскировки|en:homoglyphs, leet-decode, scam-mask scoring'],
+    ['checks','ru:Чек-номера|en:Checksums','ru:карты (Луна), ИНН, СНИЛС, IMEI — контрольные суммы|en:cards (Luhn), INN, SNILS, IMEI — checksums'],
+    ['email','ru:Email · глубоко|en:Email · deep','ru:канонизация алиасов, роль-аккаунты, MX-провайдер|en:alias canonicalization, role accounts, MX provider'],
+    ['ip','ru:Мой IP|en:My IP','ru:полные данные — только себе, чужие — без города|en:full data for yourself; others — no city'],
+    ['pwned','ru:Утечки|en:Leaks','ru:HIBP: пароль не отправляется в сеть|en:HIBP: the password never leaves the browser'],
+    ['whois','ru:Домен|en:Domain','ru:DNS, NS, риск TLD, жив ли сайт|en:DNS, NS, TLD risk, is the site alive'],
+    ['phish','ru:Фишинг|en:Phishing','ru:тайпскваттинг, punycode, @-трюки|en:typosquatting, punycode, @-tricks'],
+    ['crypto','ru:Bitcoin|en:Bitcoin','ru:валидация адреса, баланс, транзакции|en:address validation, balance, txs'],
+    ['encode','ru:Декодер|en:Decoder','ru:Base64 · Hex · URL · Morse · ROT13|en:Base64 · Hex · URL · Morse · ROT13'],
+    ['hash','ru:SHA|en:SHA','ru:SHA-256 / 1 / 512|en:SHA-256 / 1 / 512'],
+    ['passwd','ru:Пароли|en:Passwords','ru:криптостойкий генератор + энтропия|en:cryptographic generator + entropy']
+  ];
+  const pick=a=>{const parts=a.split('|');const pre=state.lang==='en'?'en:':'ru:';for(const p of parts)if(p.indexOf(pre)===0)return p.slice(pre.length);return parts[0].replace(/^(ru|en):/,'')};
+  el('modsGrid').innerHTML=info.map(m=>
+    '<div class="mod" data-mod="'+m[0]+'"><div class="mod-ic"><i data-lucide="'+MODULES[m[0]].icon+'"></i></div>'+
+    '<h4>'+esc(pick(m[1]))+'</h4><p>'+esc(pick(m[2]))+'</p><span class="mod-tag"><i></i>✓</span></div>').join('');
+  if(!el('modsGrid')._bound){
+    el('modsGrid')._bound=true;
+    el('modsGrid').addEventListener('click',function(e){
+      const card=e.target.closest('[data-mod]');
+      if(card){setModule(card.getAttribute('data-mod'));el('console').scrollIntoView({behavior:'smooth'})}
+    });
+  }
+  icons();bindTilt();
+}
+function renderPricing(){
+  const en=state.lang==='en';
+  const plans=[
+    {key:'lite',name:'LITE',price:CONFIG.PRICE_USD.lite+' $',period:en?'one run':'один запуск',
+     f:en?[['1 full run — lifetime',1],['All 12 modules',1],['History (browser)',1],['Priority support',0]]:[['1 полный запуск — навсегда',1],['Все 12 модулей',1],['История (браузер)',1],['Приоритетная поддержка',0]],
+     act:'pay:lite',cta:en?'Buy Lite':'Купить LITE',primary:0},
+    {key:'pro',name:'PRO',price:CONFIG.PRICE_USD.pro+' $',period:en?'500 runs / day':'500 запусков / день',
+     f:en?[['500 analyses/day',1],['All modules',1],['Export reports',1],['Support',1]]:[['500 анализов в день',1],['Все модули',1],['Экспорт отчётов',1],['Поддержка',1]],
+     act:'pay:pro',cta:en?'Buy Pro':'Купить PRO',primary:1},
+    {key:'biz',name:'BUSINESS',price:CONFIG.PRICE_USD.biz+' $',period:en?'unlimited':'безлимит',
+     f:en?[['Unlimited analyses',1],['REST API (roadmap)',1],['Bulk checks',1],['24/7 priority',1]]:[['Безлимит анализов',1],['REST API (roadmap)',1],['Массовые проверки',1],['Приоритет 24/7',1]],
+     act:'pay:biz',cta:en?'Buy Business':'Купить BUSINESS',primary:0}
+  ];
+  el('pricingGrid').innerHTML=plans.map(p=>{
+    const active=currentPack()===p.key;
+    return '<div class="price-card'+(p.primary?' featured':'')+'"><h3>'+p.name+'</h3>'+
+      '<div class="price">'+esc(p.price)+'<small>BTC · ETH · TON · USDT · SOL</small></div>'+
+      '<div class="period">'+esc(p.period)+' · '+esc(t('price_once'))+'</div><ul>'+
+      p.f.map(f=>'<li class="'+(f[1]?'':'no')+'"><i data-lucide="'+(f[1]?'check':'x')+'"></i>'+f[0]+'</li>').join('')+
+      '</ul><button class="btn '+(p.primary?'primary':'')+'" data-act="'+(active?'none':p.act)+'">'+(active?t('price_active'):p.cta)+'</button></div>';
+  }).join('');
+  icons();
+}
+function buildMarquee(){
+  const items=t('mq');
+  const half=items.map(s=>'<span>'+esc(s)+'<i>//</i></span>').join('');
+  el('mqTrack').innerHTML=half+half;
+}
+
+/* СОБЫТИЯ */
+el('go').addEventListener('click',run);
+el('inp').addEventListener('keydown',e=>{if(e.key==='Enter')run()});
+el('inp').addEventListener('input',()=>updateDetect(false));
+el('inp').addEventListener('paste',()=>setTimeout(()=>updateDetect(true),0));
+el('userBadge').addEventListener('click',openAuth);
+el('btnRegister').addEventListener('click',doRegister);
+el('btnLogin').addEventListener('click',doLogin);
+document.querySelectorAll('.close-x').forEach(b=>b.addEventListener('click',function(){
+  const id=b.getAttribute('data-close');
+  if(id==='adminPanel'){el('adminPanel').classList.remove('show');return}
+  closeModal(id);
+}));
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg){bg.classList.remove('show');clearInterval(payTimer)}}));
+document.addEventListener('click',function(e){
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const a=b.getAttribute('data-act');
+  if(a==='auth')openAuth();
+  else if(a==='plans'){el('limitOverlay').classList.remove('show');el('pricing').scrollIntoView({behavior:'smooth'})}
+  else if(a.indexOf('pay:')===0)openPay(a.slice(4));
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='F8'&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();toggleAdmin();return}
+  if(e.key==='/'&&document.activeElement!==el('inp')&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();el('inp').focus()}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();el('inp').focus();el('inp').select()}
+  if(e.key==='Escape'){document.querySelectorAll('.modal-bg.show').forEach(m=>m.classList.remove('show'));el('adminPanel').classList.remove('show');el('limitOverlay').classList.remove('show');clearInterval(payTimer)}
+});
+el('langBtn').addEventListener('click',function(){
+  state.lang=state.lang==='en'?'ru':'en';save();applyLang();updateCounter();
+});
+document.querySelectorAll('.w-lang button').forEach(b=>{
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.w-lang button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');
+    state.lang=b.getAttribute('data-lang');
+    applyLang();
+    el('wStart').disabled=false;
+    splitWords();
+  });
+});
+el('wStart').addEventListener('click',function(){
+  save();
+  el('welcome').classList.add('hide');
+  updateCounter();
+  toast(t('welcome_toast'));
+  splitWords();
+});
+function splitWords(){
+  document.querySelectorAll('.wsplit span').forEach(sp=>{
+    const words=sp.textContent.split(' ');
+    sp.innerHTML=words.map((w,i)=>'<span style="animation-delay:'+(i*.08+.15)+'s">'+esc(w)+'</span>').join(' ');
+  });
+}
+
+const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(x=>io.observe(x));
+function countUp(){
+  document.querySelectorAll('[data-count]').forEach(n=>{
+    const target=+n.getAttribute('data-count'),suf=n.textContent.replace(/[\d]/g,'');
+    const t0=performance.now(),dur=1200;
+    (function step(tm){
+      const k=Math.min(1,(tm-t0)/dur),e=1-Math.pow(1-k,3);
+      n.textContent=Math.round(target*e)+suf;
+      if(k<1)requestAnimationFrame(step);
+    })(t0);
+  });
+}
+
+/* СТАРТ */
+el('year').textContent=new Date().getFullYear();
+window.__ENGINE_READY=false;
+buildMarquee();
+renderToolbar();renderMods();renderPricing();
+setModule('phone');
+updateCounter();
+renderHistory();
+window.__ENGINE_READY=true;
+if(state.lang){el('welcome').classList.add('hide');applyLang();updateCounter()}
+splitWords();
+icons();
+setTimeout(countUp,600);
+validateStoredPayment();
+trackVisit();
+</script>
+</body>
+</html>
